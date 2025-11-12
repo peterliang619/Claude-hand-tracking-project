@@ -233,6 +233,23 @@
 
     <script>
         // ==========================================
+        // GLOBAL VARIABLES (defined first)
+        // ==========================================
+        let video;
+        let classifier;
+        let handpose;
+        let modelReady = false;
+        let handposeReady = false;
+        let predictions = [];
+        let currentPrediction = '';
+        let currentConfidence = 0;
+
+        // Word spelling for level 1
+        const targetWord = 'ABCDE';
+        let currentLetterIndex = 0;
+        let completedLetters = [];
+
+        // ==========================================
         // LEVEL MANAGEMENT
         // ==========================================
         // Get selected level from localStorage
@@ -270,23 +287,6 @@
 
         // Fade in immediately when script runs
         document.body.classList.add('fade-in');
-
-        // ==========================================
-        // GLOBAL VARIABLES
-        // ==========================================
-        let video;
-        let classifier;
-        let handpose;
-        let modelReady = false;
-        let handposeReady = false;
-        let predictions = [];
-        let currentPrediction = '';
-        let currentConfidence = 0;
-
-        // Word spelling for level 1
-        const targetWord = 'ABCDE';
-        let currentLetterIndex = 0;
-        let completedLetters = [];
 
         // Teachable Machine model URL
         // IMPORTANT: Replace this URL with your own trained model from Teachable Machine
