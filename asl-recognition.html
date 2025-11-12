@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASL Alphabet Recognition</title>
+    <style>
+        /* ==========================================
+           STYLING - Clean minimal dark theme
+           ========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        #status {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            color: #888;
+            min-height: 30px;
+        }
+
+        /* Prediction display area */
+        #prediction-container {
+            background-color: #2a2a2a;
+            padding: 30px 50px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            min-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #predicted-letter {
+            font-size: 6em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #confidence {
+            font-size: 1.5em;
+            color: #aaa;
+            font-weight: 300;
+        }
+
+        /* Canvas container */
+        #canvas-container {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Instructions */
+        #instructions {
+            margin-top: 30px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .model-note {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #2a2a2a;
+            border-left: 4px solid #00ffff;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 0.85em;
+            color: #bbb;
+        }
+
+        .model-note strong {
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASL Alphabet Recognition</h1>
+
+    <div id="status">Loading model...</div>
+
+    <!-- Prediction display -->
+    <div id="prediction-container">
+        <div id="predicted-letter">—</div>
+        <div id="confidence">Waiting for sign...</div>
+    </div>
+
+    <!-- Webcam canvas will be inserted here -->
+    <div id="canvas-container"></div>
+
+    <!-- Instructions -->
+    <div id="instructions">
+        <p>Show an ASL alphabet sign to your webcam. The recognized letter will appear above.</p>
+        <div class="model-note">
+            <strong>Note:</strong> This demo uses a Teachable Machine model.
+            For best results, ensure good lighting and position your hand clearly in frame.
+            Model is trained on ASL alphabet signs A-Z.
+        </div>
+    </div>
+
+    <!-- Load p5.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+    <!-- Load ml5.js library -->
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+
+    <script>
+        // ==========================================
+        // GLOBAL VARIABLES
+        // ==========================================
+        let video;
+        let classifier;
+        let modelReady = false;
+        let currentPrediction = '';
+        let currentConfidence = 0;
+
+        // Teachable Machine model URL
+        // This is a pretrained ASL alphabet model from Teachable Machine
+        // You can replace this with your own model URL from https://teachablemachine.withgoogle.com/
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/c0k2P8dgS/';
+
+        // Confidence threshold (80%)
+        const CONFIDENCE_THRESHOLD = 0.80;
+
+        // ==========================================
+        // P5.JS SETUP - Runs once at start
+        // ==========================================
+        function setup() {
+            // Create canvas for webcam display
+            let canvas = createCanvas(640, 480);
+            canvas.parent('canvas-container');
+
+            // Initialize webcam capture
+            video = createCapture(VIDEO);
+            video.size(640, 480);
+            video.hide(); // Hide default HTML video element
+
+            // Load the Teachable Machine image classification model
+            // The model consists of model.json and weights files
+            classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded);
+        }
+
+        // ==========================================
+        // MODEL LOADED CALLBACK
+        // ==========================================
+        function modelLoaded() {
+            console.log('ASL model loaded successfully!');
+            modelReady = true;
+            document.getElementById('status').textContent = 'Model ready! Show an ASL sign.';
+
+            // Start classifying the video feed
+            classifyVideo();
+        }
+
+        // ==========================================
+        // CLASSIFY VIDEO FEED CONTINUOUSLY
+        // ==========================================
+        function classifyVideo() {
+            // Classify the current video frame
+            // The classifier will call gotResult with predictions
+            classifier.classify(video, gotResult);
+        }
+
+        // ==========================================
+        // HANDLE CLASSIFICATION RESULTS
+        // ==========================================
+        function gotResult(error, results) {
+            // Handle any errors
+            if (error) {
+                console.error('Classification error:', error);
+                return;
+            }
+
+            // results is an array of predictions sorted by confidence
+            // results[0] is the most confident prediction
+            if (results && results.length > 0) {
+                const topPrediction = results[0];
+                currentPrediction = topPrediction.label;
+                currentConfidence = topPrediction.confidence;
+
+                // Update the display with the new prediction
+                updateDisplay();
+            }
+
+            // Continue classifying (recursive call for continuous predictions)
+            classifyVideo();
+        }
+
+        // ==========================================
+        // UPDATE PREDICTION DISPLAY
+        // ==========================================
+        function updateDisplay() {
+            const letterElement = document.getElementById('predicted-letter');
+            const confidenceElement = document.getElementById('confidence');
+
+            // Check if confidence meets threshold
+            if (currentConfidence >= CONFIDENCE_THRESHOLD) {
+                // High confidence - show the predicted letter
+                letterElement.textContent = currentPrediction;
+                letterElement.style.color = '#00ffff';
+
+                // Display confidence percentage
+                const confidencePercent = (currentConfidence * 100).toFixed(0);
+                confidenceElement.textContent = `${currentPrediction} — ${confidencePercent}%`;
+                confidenceElement.style.color = '#aaa';
+            } else {
+                // Low confidence - show unclear message
+                letterElement.textContent = '...';
+                letterElement.style.color = '#666';
+                confidenceElement.textContent = 'Unclear sign';
+                confidenceElement.style.color = '#666';
+            }
+        }
+
+        // ==========================================
+        // P5.JS DRAW - Runs continuously
+        // ==========================================
+        function draw() {
+            // Draw the webcam feed to the canvas (mirrored for natural interaction)
+            push();
+            translate(width, 0);
+            scale(-1, 1); // Mirror the video horizontally
+            image(video, 0, 0, width, height);
+            pop();
+
+            // Optional: Draw a subtle frame overlay when model is ready
+            if (modelReady) {
+                noFill();
+                stroke(0, 255, 255, 100);
+                strokeWeight(3);
+                rect(10, 10, width - 20, height - 20, 10);
+            }
+        }
+    </script>
+</body>
+</html>
