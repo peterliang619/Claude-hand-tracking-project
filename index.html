@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASL Recognition - Select Level</title>
+    <title>Echo Hand</title>
     <style>
         /* ==========================================
-           MINIMALIST LEVEL SELECTION
+           FROSTED GLASS LANDING PAGE
            ========================================== */
         * {
             margin: 0;
@@ -23,107 +23,82 @@
             height: 100vh;
             overflow: hidden;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        h1 {
-            font-size: 0.75em;
-            margin-bottom: 100px;
-            font-weight: 400;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: #666;
-        }
-
-        .level-container {
-            display: flex;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .level-button {
-            background: transparent;
-            border: 1px solid #333;
-            color: #666;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 3em;
-            font-weight: 200;
-            padding: 40px 60px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 2px;
         }
 
-        .level-button:hover {
-            border-color: #666;
+        /* Frosted glass overlay */
+        #landing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease;
+            z-index: 1000;
+        }
+
+        /* Fade out animation */
+        #landing-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Title styling */
+        h1 {
+            font-size: 48px;
+            font-weight: 200;
+            letter-spacing: 8px;
             color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.03);
-        }
-
-        .level-button:active {
-            border-color: #999;
-            color: #ffffff;
-        }
-
-        .level-label {
-            font-size: 0.65em;
-            margin-top: 20px;
             text-align: center;
-            color: #444;
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-transform: lowercase;
+            user-select: none;
         }
 
-        @media (max-width: 768px) {
-            .level-container {
-                flex-direction: column;
-                gap: 40px;
-            }
-
-            .level-button {
-                font-size: 2.5em;
-                padding: 30px 50px;
-            }
+        /* Subtle hint text */
+        .hint {
+            position: absolute;
+            bottom: 60px;
+            font-size: 0.7em;
+            color: #666;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            font-weight: 300;
         }
     </style>
 </head>
 <body>
-    <h1>ASL RECOGNITION</h1>
-
-    <div class="level-container">
-        <div>
-            <button class="level-button" onclick="selectLevel(1)">1</button>
-            <div class="level-label">beginner</div>
-        </div>
-
-        <div>
-            <button class="level-button" onclick="selectLevel(2)">2</button>
-            <div class="level-label">intermediate</div>
-        </div>
-
-        <div>
-            <button class="level-button" onclick="selectLevel(3)">3</button>
-            <div class="level-label">advanced</div>
-        </div>
+    <div id="landing-overlay">
+        <h1>Echo Hand.</h1>
+        <div class="hint">click to enter</div>
     </div>
 
     <script>
-        function selectLevel(level) {
-            // Store selected level in localStorage
-            localStorage.setItem('aslLevel', level);
+        // ==========================================
+        // LANDING PAGE INTERACTION
+        // ==========================================
+        const overlay = document.getElementById('landing-overlay');
 
-            // Navigate to the ASL recognition page
-            window.location.href = 'asl-recognition.html';
-        }
+        // Click anywhere to enter
+        overlay.addEventListener('click', () => {
+            // Add fade-out class
+            overlay.classList.add('fade-out');
 
-        // Optional: Add keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '1') selectLevel(1);
-            if (e.key === '2') selectLevel(2);
-            if (e.key === '3') selectLevel(3);
+            // Navigate to level selection after fade completes
+            setTimeout(() => {
+                window.location.href = 'levels.html';
+            }, 1000); // 1 second to match transition
+        });
+
+        // Optional: Add subtle animation on load
+        window.addEventListener('load', () => {
+            overlay.style.opacity = '1';
         });
     </script>
 </body>
