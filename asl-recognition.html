@@ -146,21 +146,41 @@
         }
 
         #word-letters {
-            font-size: 4em;
-            font-weight: 200;
-            letter-spacing: 15px;
             display: flex;
             justify-content: center;
-            gap: 10px;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .letter-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
         .word-letter {
+            font-size: 4em;
+            font-weight: 200;
+            letter-spacing: 2px;
             color: #333;
             transition: color 0.5s ease;
         }
 
         .word-letter.completed {
             color: #ffffff;
+        }
+
+        .letter-image {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            opacity: 0.3;
+            transition: opacity 0.5s ease;
+        }
+
+        .letter-image.completed {
+            opacity: 1;
         }
 
         #word-instruction {
@@ -314,14 +334,30 @@
             const wordDisplay = document.getElementById('word-display');
             wordDisplay.classList.add('active');
 
-            // Create letter elements
+            // Create letter elements with images
             const wordLettersDiv = document.getElementById('word-letters');
             targetWord.split('').forEach((letter, index) => {
+                // Create container for letter and image
+                const container = document.createElement('div');
+                container.className = 'letter-container';
+
+                // Create letter text
                 const letterSpan = document.createElement('span');
                 letterSpan.className = 'word-letter';
                 letterSpan.id = `letter-${index}`;
                 letterSpan.textContent = letter;
-                wordLettersDiv.appendChild(letterSpan);
+
+                // Create image element
+                const letterImage = document.createElement('img');
+                letterImage.className = 'letter-image';
+                letterImage.id = `image-${index}`;
+                letterImage.src = `${letter}.png`;
+                letterImage.alt = `ASL sign for ${letter}`;
+
+                // Append letter and image to container
+                container.appendChild(letterSpan);
+                container.appendChild(letterImage);
+                wordLettersDiv.appendChild(container);
             });
         }
 
@@ -486,8 +522,12 @@
                         if (!completedLetters.includes(currentLetterIndex)) {
                             completedLetters.push(currentLetterIndex);
                             const letterSpan = document.getElementById(`letter-${currentLetterIndex}`);
+                            const letterImage = document.getElementById(`image-${currentLetterIndex}`);
                             if (letterSpan) {
                                 letterSpan.classList.add('completed');
+                            }
+                            if (letterImage) {
+                                letterImage.classList.add('completed');
                             }
                             currentLetterIndex++;
 
