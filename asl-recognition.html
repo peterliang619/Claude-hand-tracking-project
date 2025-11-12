@@ -192,6 +192,49 @@
         #instructions {
             display: none;
         }
+
+        /* Congratulations overlay */
+        #congrats-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        #congrats-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        #congrats-content {
+            text-align: center;
+        }
+
+        #congrats-message {
+            font-size: 3em;
+            font-weight: 200;
+            letter-spacing: 8px;
+            color: #ffffff;
+            margin-bottom: 30px;
+            text-transform: lowercase;
+        }
+
+        #congrats-submessage {
+            font-size: 1em;
+            color: #666;
+            letter-spacing: 3px;
+            font-weight: 300;
+        }
     </style>
 </head>
 <body>
@@ -223,6 +266,14 @@
     <!-- Right panel - Camera feed -->
     <div id="right-panel">
         <div id="canvas-container"></div>
+    </div>
+
+    <!-- Congratulations overlay -->
+    <div id="congrats-overlay">
+        <div id="congrats-content">
+            <div id="congrats-message">congratulations!</div>
+            <div id="congrats-submessage">returning to level selection...</div>
+        </div>
     </div>
 
     <!-- Load p5.js library -->
@@ -445,6 +496,9 @@
                                 setTimeout(() => {
                                     document.getElementById('word-instruction').textContent = 'complete!';
                                     document.getElementById('word-instruction').style.color = '#00ff00';
+
+                                    // Show congratulations overlay
+                                    showCongratulations();
                                 }, 500);
                             }
                         }
@@ -457,6 +511,27 @@
                 confidenceElement.textContent = '—';
                 confidenceElement.style.color = '#222';
             }
+        }
+
+        // ==========================================
+        // SHOW CONGRATULATIONS OVERLAY
+        // ==========================================
+        function showCongratulations() {
+            const overlay = document.getElementById('congrats-overlay');
+
+            // Show overlay with fade-in
+            overlay.classList.add('show');
+
+            // Wait 3 seconds, then redirect to levels page
+            setTimeout(() => {
+                // Fade out overlay
+                overlay.style.opacity = '0';
+
+                // Navigate after fade
+                setTimeout(() => {
+                    window.location.href = 'levels.html';
+                }, 800);
+            }, 3000);
         }
 
         // ==========================================
