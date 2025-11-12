@@ -134,6 +134,42 @@
             letter-spacing: 2px;
         }
 
+        /* Word spelling display for level 1 */
+        #word-display {
+            display: none;
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        #word-display.active {
+            display: block;
+        }
+
+        #word-letters {
+            font-size: 4em;
+            font-weight: 200;
+            letter-spacing: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .word-letter {
+            color: #333;
+            transition: color 0.5s ease;
+        }
+
+        .word-letter.completed {
+            color: #ffffff;
+        }
+
+        #word-instruction {
+            font-size: 0.7em;
+            color: #555;
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+
         /* Canvas container */
         #canvas-container {
             width: 100%;
@@ -175,6 +211,12 @@
             <div id="confidence">—</div>
         </div>
 
+        <!-- Word spelling display (level 1 only) -->
+        <div id="word-display">
+            <div id="word-letters"></div>
+            <div id="word-instruction">spell the word</div>
+        </div>
+
         <div id="status">initializing</div>
     </div>
 
@@ -198,6 +240,22 @@
 
         // Update level indicator
         document.getElementById('level-indicator').textContent = `level ${selectedLevel}`;
+
+        // Initialize word display for level 1
+        if (selectedLevel === '1') {
+            const wordDisplay = document.getElementById('word-display');
+            wordDisplay.classList.add('active');
+
+            // Create letter elements
+            const wordLettersDiv = document.getElementById('word-letters');
+            targetWord.split('').forEach((letter, index) => {
+                const letterSpan = document.createElement('span');
+                letterSpan.className = 'word-letter';
+                letterSpan.id = `letter-${index}`;
+                letterSpan.textContent = letter;
+                wordLettersDiv.appendChild(letterSpan);
+            });
+        }
 
         // Function to go back to level selection
         function goBack() {
@@ -227,6 +285,11 @@
         let currentPrediction = '';
         let currentConfidence = 0;
 
+        // Word spelling for level 1
+        const targetWord = 'ABCDE';
+        let currentLetterIndex = 0;
+        let completedLetters = [];
+
         // Teachable Machine model URL
         // IMPORTANT: Replace this URL with your own trained model from Teachable Machine
         // To create your own model:
@@ -238,7 +301,7 @@
         // 6. Export → "Upload my model" → Copy the shareable link
         // 7. Replace the URL below with your model URL
 
-        const modelURL = 'https://teachablemachine.withgoogle.com/models/Md1wVGcGO/';
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/EjyxtH0I5/';
 
         // Confidence threshold (80%)
         const CONFIDENCE_THRESHOLD = 0.80;
@@ -364,6 +427,31 @@
                 const confidencePercent = (currentConfidence * 100).toFixed(0);
                 confidenceElement.textContent = `${confidencePercent}%`;
                 confidenceElement.style.color = '#555';
+
+                // Level 1: Check if predicted letter matches next expected letter
+                if (selectedLevel === '1' && currentLetterIndex < targetWord.length) {
+                    const expectedLetter = targetWord[currentLetterIndex];
+
+                    if (currentPrediction === expectedLetter) {
+                        // Mark letter as completed
+                        if (!completedLetters.includes(currentLetterIndex)) {
+                            completedLetters.push(currentLetterIndex);
+                            const letterSpan = document.getElementById(`letter-${currentLetterIndex}`);
+                            if (letterSpan) {
+                                letterSpan.classList.add('completed');
+                            }
+                            currentLetterIndex++;
+
+                            // Check if word is complete
+                            if (currentLetterIndex >= targetWord.length) {
+                                setTimeout(() => {
+                                    document.getElementById('word-instruction').textContent = 'complete!';
+                                    document.getElementById('word-instruction').style.color = '#00ff00';
+                                }, 500);
+                            }
+                        }
+                    }
+                }
             } else {
                 // Low confidence - show minimal indicator
                 letterElement.textContent = '—';
