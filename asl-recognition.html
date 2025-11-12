@@ -197,7 +197,10 @@
         // ==========================================
         let video;
         let classifier;
+        let handpose;
         let modelReady = false;
+        let handposeReady = false;
+        let predictions = [];
         let currentPrediction = '';
         let currentConfidence = 0;
 
@@ -230,12 +233,31 @@
             video.size(width, height);
             video.hide(); // Hide default HTML video element
 
+            // Load the Handpose model for hand tracking
+            handpose = ml5.handpose(video, handposeLoaded);
+            handpose.on('predict', gotHands);
+
             // Load the Teachable Machine image classification model
             try {
                 classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded, modelError);
             } catch (error) {
                 modelError(error);
             }
+        }
+
+        // ==========================================
+        // HANDPOSE LOADED CALLBACK
+        // ==========================================
+        function handposeLoaded() {
+            console.log('Handpose model loaded!');
+            handposeReady = true;
+        }
+
+        // ==========================================
+        // HAND DETECTION CALLBACK
+        // ==========================================
+        function gotHands(results) {
+            predictions = results;
         }
 
         // ==========================================
@@ -340,6 +362,82 @@
             scale(-1, 1); // Mirror the video horizontally
             image(video, 0, 0, width, height);
             pop();
+
+            // Draw hand tracking if hands are detected
+            if (handposeReady && predictions.length > 0) {
+                drawHandSkeleton();
+            }
+        }
+
+        // ==========================================
+        // DRAW HAND SKELETON AND LANDMARKS
+        // ==========================================
+        function drawHandSkeleton() {
+            // Loop through all detected hands
+            for (let i = 0; i < predictions.length; i++) {
+                const hand = predictions[i];
+                const landmarks = hand.landmarks;
+
+                // Mirror the landmarks for the flipped video
+                const mirroredLandmarks = landmarks.map(point => [width - point[0], point[1], point[2]]);
+
+                // Draw the skeleton connections first
+                drawConnections(mirroredLandmarks);
+
+                // Draw the landmark points (joints)
+                drawLandmarks(mirroredLandmarks);
+            }
+        }
+
+        // ==========================================
+        // DRAW CONNECTIONS BETWEEN LANDMARKS
+        // ==========================================
+        function drawConnections(landmarks) {
+            // Set style for skeleton lines - minimalist white lines
+            stroke(255, 255, 255, 150);
+            strokeWeight(1.5);
+            noFill();
+
+            // Define the connections for the hand skeleton
+            const connections = [
+                // Thumb
+                [0, 1, 2, 3, 4],
+                // Index finger
+                [0, 5, 6, 7, 8],
+                // Middle finger
+                [0, 9, 10, 11, 12],
+                // Ring finger
+                [0, 13, 14, 15, 16],
+                // Pinky
+                [0, 17, 18, 19, 20],
+                // Palm base connections
+                [5, 9, 13, 17]
+            ];
+
+            // Draw each connection path
+            for (let path of connections) {
+                beginShape();
+                for (let index of path) {
+                    const [x, y] = landmarks[index];
+                    vertex(x, y);
+                }
+                endShape();
+            }
+        }
+
+        // ==========================================
+        // DRAW LANDMARK POINTS (JOINTS)
+        // ==========================================
+        function drawLandmarks(landmarks) {
+            // Set style for landmark circles - subtle cyan
+            fill(0, 255, 255, 120);
+            noStroke();
+
+            // Draw a circle for each of the 21 landmarks
+            for (let i = 0; i < landmarks.length; i++) {
+                const [x, y] = landmarks[i];
+                circle(x, y, 6);
+            }
         }
     </script>
 </body>
