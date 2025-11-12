@@ -41,8 +41,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            opacity: 0;
             transition: opacity 1s ease;
             z-index: 1000;
+        }
+
+        /* Fade in animation */
+        #landing-overlay.fade-in {
+            opacity: 1;
         }
 
         /* Fade out animation */
@@ -96,9 +102,9 @@
             }, 1000); // 1 second to match transition
         });
 
-        // Optional: Add subtle animation on load
+        // Fade in on page load
         window.addEventListener('load', () => {
-            overlay.style.opacity = '1';
+            overlay.classList.add('fade-in');
         });
     </script>
 </body>

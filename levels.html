@@ -26,6 +26,18 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* Fade in animation */
+        body.fade-in {
+            opacity: 1;
+        }
+
+        /* Fade out animation */
+        body.fade-out {
+            opacity: 0;
         }
 
         h1 {
@@ -111,15 +123,28 @@
     </div>
 
     <script>
+        // ==========================================
+        // PAGE TRANSITION
+        // ==========================================
+        // Fade in on page load
+        window.addEventListener('load', () => {
+            document.body.classList.add('fade-in');
+        });
+
         function selectLevel(level) {
             // Store selected level in localStorage
             localStorage.setItem('aslLevel', level);
 
-            // Navigate to the ASL recognition page
-            window.location.href = 'asl-recognition.html';
+            // Fade out before navigation
+            document.body.classList.add('fade-out');
+
+            // Navigate to the ASL recognition page after fade
+            setTimeout(() => {
+                window.location.href = 'asl-recognition.html';
+            }, 800);
         }
 
-        // Optional: Add keyboard shortcuts
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === '1') selectLevel(1);
             if (e.key === '2') selectLevel(2);
