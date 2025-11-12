@@ -58,6 +58,42 @@
             color: #666;
         }
 
+        /* Back button */
+        #back-button {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.7em;
+            font-weight: 300;
+            padding: 10px 20px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        #back-button:hover {
+            border-color: #666;
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Level indicator */
+        #level-indicator {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 0.7em;
+            color: #444;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
         #status {
             font-size: 0.65em;
             margin-top: 80px;
@@ -111,6 +147,12 @@
     </style>
 </head>
 <body>
+    <!-- Back button -->
+    <button id="back-button" onclick="goBack()">← levels</button>
+
+    <!-- Level indicator -->
+    <div id="level-indicator">level —</div>
+
     <!-- Left panel - Minimalist display -->
     <div id="left-panel">
         <h2>ASL RECOGNITION</h2>
@@ -136,6 +178,20 @@
     <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
 
     <script>
+        // ==========================================
+        // LEVEL MANAGEMENT
+        // ==========================================
+        // Get selected level from localStorage
+        const selectedLevel = localStorage.getItem('aslLevel') || '1';
+
+        // Update level indicator
+        document.getElementById('level-indicator').textContent = `level ${selectedLevel}`;
+
+        // Function to go back to level selection
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
         // ==========================================
         // GLOBAL VARIABLES
         // ==========================================
