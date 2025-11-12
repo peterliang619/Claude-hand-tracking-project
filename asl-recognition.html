@@ -606,8 +606,7 @@
 
             // Wait 3 seconds, then redirect to levels page
             setTimeout(() => {
-                // Fade out both overlay and body simultaneously to prevent flash
-                overlay.style.opacity = '0';
+                // Keep overlay visible, just fade out body to prevent flash
                 document.body.classList.add('fade-out');
 
                 // Navigate after fade
