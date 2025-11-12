@@ -230,7 +230,6 @@
 
             // Initialize webcam capture
             video = createCapture(VIDEO);
-            video.size(width, height);
             video.hide(); // Hide default HTML video element
 
             // Load the Handpose model for hand tracking
@@ -265,7 +264,6 @@
         // ==========================================
         function windowResized() {
             resizeCanvas(windowWidth / 2, windowHeight);
-            video.size(width, height);
         }
 
         // ==========================================
@@ -378,14 +376,22 @@
                 const hand = predictions[i];
                 const landmarks = hand.landmarks;
 
-                // Mirror the landmarks for the flipped video
-                const mirroredLandmarks = landmarks.map(point => [width - point[0], point[1], point[2]]);
+                // Calculate scale factors between video and canvas
+                const scaleX = width / video.width;
+                const scaleY = height / video.height;
+
+                // Scale and mirror the landmarks for the stretched, flipped video
+                const scaledLandmarks = landmarks.map(point => [
+                    width - (point[0] * scaleX),  // Mirror X and scale
+                    point[1] * scaleY,             // Scale Y
+                    point[2]                       // Keep Z depth as-is
+                ]);
 
                 // Draw the skeleton connections first
-                drawConnections(mirroredLandmarks);
+                drawConnections(scaledLandmarks);
 
                 // Draw the landmark points (joints)
-                drawLandmarks(mirroredLandmarks);
+                drawLandmarks(scaledLandmarks);
             }
         }
 
