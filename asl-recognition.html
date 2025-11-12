@@ -25,6 +25,7 @@
             display: flex;
             opacity: 0;
             transition: opacity 0.8s ease;
+            cursor: none;
         }
 
         /* Fade in animation */
@@ -256,9 +257,49 @@
             letter-spacing: 3px;
             font-weight: 300;
         }
+
+        /* Custom cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-circle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.2s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        #back-button:hover ~ .cursor-dot,
+        button:hover ~ .cursor-dot {
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        #back-button:hover ~ .cursor-circle,
+        button:hover ~ .cursor-circle {
+            transform: translate(-50%, -50%) scale(1.5);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
 <body>
+    <!-- Custom cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-circle"></div>
+
     <!-- Back button -->
     <button id="back-button" onclick="goBack()">← levels</button>
 
@@ -670,6 +711,41 @@
                 circle(x, y, 6);
             }
         }
+
+        // ==========================================
+        // CUSTOM CURSOR TRACKING
+        // ==========================================
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorCircle = document.querySelector('.cursor-circle');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let circleX = 0;
+        let circleY = 0;
+
+        // Track mouse position
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            // Update dot position immediately
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        // Smooth follow for circle
+        function animateCursor() {
+            // Lerp (linear interpolation) for smooth following
+            circleX += (mouseX - circleX) * 0.15;
+            circleY += (mouseY - circleY) * 0.15;
+
+            cursorCircle.style.left = circleX + 'px';
+            cursorCircle.style.top = circleY + 'px';
+
+            requestAnimationFrame(animateCursor);
+        }
+
+        animateCursor();
     </script>
 </body>
 </html>

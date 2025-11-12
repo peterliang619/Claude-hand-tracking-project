@@ -25,7 +25,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
+            cursor: none;
         }
 
         /* Frosted glass overlay */
@@ -77,9 +77,47 @@
             text-transform: lowercase;
             font-weight: 300;
         }
+
+        /* Custom cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-circle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.2s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        #landing-overlay:hover ~ .cursor-dot {
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        #landing-overlay:hover ~ .cursor-circle {
+            transform: translate(-50%, -50%) scale(1.5);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
 <body>
+    <!-- Custom cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-circle"></div>
+
     <div id="landing-overlay">
         <h1>Echo Hand.</h1>
         <div class="hint">click to enter</div>
@@ -104,6 +142,41 @@
 
         // Fade in immediately when script runs
         overlay.classList.add('fade-in');
+
+        // ==========================================
+        // CUSTOM CURSOR TRACKING
+        // ==========================================
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorCircle = document.querySelector('.cursor-circle');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let circleX = 0;
+        let circleY = 0;
+
+        // Track mouse position
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            // Update dot position immediately
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        // Smooth follow for circle
+        function animateCursor() {
+            // Lerp (linear interpolation) for smooth following
+            circleX += (mouseX - circleX) * 0.15;
+            circleY += (mouseY - circleY) * 0.15;
+
+            cursorCircle.style.left = circleX + 'px';
+            cursorCircle.style.top = circleY + 'px';
+
+            requestAnimationFrame(animateCursor);
+        }
+
+        animateCursor();
     </script>
 </body>
 </html>
