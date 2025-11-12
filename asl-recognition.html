@@ -18,87 +18,99 @@
             background-color: #1a1a1a;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Left panel - Minimalist info display */
+        #left-panel {
+            width: 50%;
+            height: 100vh;
+            background-color: #1a1a1a;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Right panel - Camera feed */
+        #right-panel {
+            width: 50%;
+            height: 100vh;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
 
         h1 {
             font-size: 2.5em;
-            margin-bottom: 20px;
+            margin-bottom: 60px;
             font-weight: 300;
             letter-spacing: 2px;
         }
 
         #status {
-            font-size: 1.1em;
-            margin-bottom: 20px;
+            font-size: 1em;
+            margin-bottom: 40px;
             color: #888;
-            min-height: 30px;
         }
 
         /* Prediction display area */
         #prediction-container {
-            background-color: #2a2a2a;
-            padding: 30px 50px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            min-width: 400px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
         }
 
         #predicted-letter {
-            font-size: 6em;
+            font-size: 10em;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             color: #00ffff;
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            line-height: 1;
         }
 
         #confidence {
-            font-size: 1.5em;
+            font-size: 1.3em;
             color: #aaa;
             font-weight: 300;
         }
 
         /* Canvas container */
         #canvas-container {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         canvas {
             display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
         /* Instructions */
         #instructions {
-            margin-top: 30px;
+            margin-top: 40px;
             text-align: center;
-            color: #888;
-            font-size: 0.9em;
-            max-width: 600px;
+            color: #666;
+            font-size: 0.8em;
+            max-width: 500px;
             line-height: 1.6;
         }
 
         .model-note {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #2a2a2a;
-            border-left: 4px solid #00ffff;
-            border-radius: 5px;
-            text-align: left;
-            font-size: 0.85em;
-            color: #bbb;
+            display: none; /* Hide detailed instructions for minimal look */
         }
 
         .model-note strong {
@@ -107,35 +119,27 @@
     </style>
 </head>
 <body>
-    <h1>ASL Alphabet Recognition</h1>
+    <!-- Left panel - Minimalist display -->
+    <div id="left-panel">
+        <h1>ASL Recognition</h1>
 
-    <div id="status">Loading model...</div>
+        <!-- Prediction display -->
+        <div id="prediction-container">
+            <div id="predicted-letter">—</div>
+            <div id="confidence">Waiting for sign...</div>
+        </div>
 
-    <!-- Prediction display -->
-    <div id="prediction-container">
-        <div id="predicted-letter">—</div>
-        <div id="confidence">Waiting for sign...</div>
+        <div id="status">Loading model...</div>
+
+        <!-- Minimal instructions -->
+        <div id="instructions">
+            <p>Show an ASL sign to the camera</p>
+        </div>
     </div>
 
-    <!-- Webcam canvas will be inserted here -->
-    <div id="canvas-container"></div>
-
-    <!-- Instructions -->
-    <div id="instructions">
-        <p>Show an ASL alphabet sign to your webcam. The recognized letter will appear above.</p>
-        <div class="model-note">
-            <strong>⚠️ Important:</strong> You need to train your own ASL model for this to work!<br><br>
-            <strong>How to create your ASL model:</strong><br>
-            1. Visit <a href="https://teachablemachine.withgoogle.com/" target="_blank" style="color: #00ffff;">teachablemachine.withgoogle.com</a><br>
-            2. Click "Get Started" → "Image Project" → "Standard image model"<br>
-            3. Create 26 classes (one for each letter A-Z)<br>
-            4. For each class, use your webcam to capture 50-100 images of that ASL sign<br>
-            5. Click "Train Model" and wait for training to complete<br>
-            6. Click "Export Model" → "Upload my model"<br>
-            7. Copy the shareable link (e.g., https://teachablemachine.withgoogle.com/models/xxxxx/)<br>
-            8. Replace the <code style="background: #1a1a1a; padding: 2px 5px; border-radius: 3px;">modelURL</code> in the code with your link<br><br>
-            <strong>Tip:</strong> For best results, capture images with varied hand positions and lighting conditions!
-        </div>
+    <!-- Right panel - Camera feed -->
+    <div id="right-panel">
+        <div id="canvas-container"></div>
     </div>
 
     <!-- Load p5.js library -->
@@ -174,13 +178,13 @@
         // P5.JS SETUP - Runs once at start
         // ==========================================
         function setup() {
-            // Create canvas for webcam display
-            let canvas = createCanvas(640, 480);
+            // Create canvas to fill the right half of the screen
+            let canvas = createCanvas(windowWidth / 2, windowHeight);
             canvas.parent('canvas-container');
 
             // Initialize webcam capture
             video = createCapture(VIDEO);
-            video.size(640, 480);
+            video.size(width, height);
             video.hide(); // Hide default HTML video element
 
             // Load the Teachable Machine image classification model
@@ -191,6 +195,14 @@
             } catch (error) {
                 modelError(error);
             }
+        }
+
+        // ==========================================
+        // WINDOW RESIZE - Adjust canvas when window resizes
+        // ==========================================
+        function windowResized() {
+            resizeCanvas(windowWidth / 2, windowHeight);
+            video.size(width, height);
         }
 
         // ==========================================
@@ -281,20 +293,12 @@
         // P5.JS DRAW - Runs continuously
         // ==========================================
         function draw() {
-            // Draw the webcam feed to the canvas (mirrored for natural interaction)
+            // Draw the webcam feed to fill the entire canvas (mirrored for natural interaction)
             push();
             translate(width, 0);
             scale(-1, 1); // Mirror the video horizontally
             image(video, 0, 0, width, height);
             pop();
-
-            // Optional: Draw a subtle frame overlay when model is ready
-            if (modelReady) {
-                noFill();
-                stroke(0, 255, 255, 100);
-                strokeWeight(3);
-                rect(10, 10, width - 20, height - 20, 10);
-            }
         }
     </script>
 </body>
