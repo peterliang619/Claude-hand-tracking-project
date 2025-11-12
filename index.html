@@ -102,10 +102,8 @@
             }, 1000); // 1 second to match transition
         });
 
-        // Fade in on page load
-        window.addEventListener('load', () => {
-            overlay.classList.add('fade-in');
-        });
+        // Fade in immediately when script runs
+        overlay.classList.add('fade-in');
     </script>
 </body>
 </html>
