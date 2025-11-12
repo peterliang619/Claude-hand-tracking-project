@@ -604,15 +604,10 @@
             // Show overlay with fade-in
             overlay.classList.add('show');
 
-            // Wait 3 seconds, then redirect to levels page
+            // Wait 3 seconds, then redirect directly while overlay is still visible
             setTimeout(() => {
-                // Keep overlay visible, just fade out body to prevent flash
-                document.body.classList.add('fade-out');
-
-                // Navigate after fade
-                setTimeout(() => {
-                    window.location.href = 'levels.html';
-                }, 800);
+                // Navigate immediately with overlay still showing to prevent flash
+                window.location.href = 'levels.html';
             }, 3000);
         }
 
