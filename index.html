@@ -3,34 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Tracking with p5.js and ml5.js</title>
+    <title>ASL Alphabet Recognition</title>
     <style>
-        body {
+        /* ==========================================
+           STYLING - Clean minimal dark theme
+           ========================================== */
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Page header */
+        header {
+            background-color: #1a1a1a;
+            padding: 20px 40px;
+            border-bottom: 1px solid #333;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        /* Main content wrapper */
+        main {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* ASL Recognition container */
+        #asl-container {
+            display: flex;
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            height: 700px;
+        }
+
+        /* Left panel - Minimalist info display */
+        #left-panel {
+            width: 50%;
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Right panel - Camera feed */
+        #right-panel {
+            width: 50%;
+            background-color: #000;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-color: #1a1a1a;
-            font-family: Arial, sans-serif;
+            position: relative;
         }
-        main {
+
+        #left-panel h2 {
+            font-size: 2.5em;
+            margin: 0 0 60px 0;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        /* Footer section */
+        footer {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
             text-align: center;
+            color: #666;
+            font-size: 0.9em;
         }
+
+        footer a {
+            color: #00ffff;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
         #status {
-            color: #ffffff;
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 14px;
+            font-size: 1em;
+            margin-bottom: 40px;
+            color: #888;
+        }
+
+        /* Prediction display area */
+        #prediction-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        #predicted-letter {
+            font-size: 10em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #00ffff;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            line-height: 1;
+        }
+
+        #confidence {
+            font-size: 1.3em;
+            color: #aaa;
+            font-weight: 300;
+        }
+
+        /* Canvas container */
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Instructions */
+        #instructions {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8em;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .model-note {
+            display: none; /* Hide detailed instructions for minimal look */
+        }
+
+        .model-note strong {
+            color: #00ffff;
+        }
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 1024px) {
+            #asl-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            #left-panel, #right-panel {
+                width: 100%;
+            }
+
+            #left-panel {
+                padding: 30px 20px;
+            }
+
+            #right-panel {
+                height: 500px;
+            }
+
+            #left-panel h2 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+
+            #predicted-letter {
+                font-size: 8em;
+            }
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 15px 20px;
+            }
+
+            header h1 {
+                font-size: 1.3em;
+            }
+
+            main {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+
+            #asl-container {
+                border-radius: 8px;
+            }
+
+            #predicted-letter {
+                font-size: 6em;
+            }
+
+            #right-panel {
+                height: 400px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Page Header -->
+    <header>
+        <h1>ASL Alphabet Recognition</h1>
+    </header>
+
+    <!-- Main Content -->
     <main>
-        <div id="status">Loading hand tracking model...</div>
-        <div id="canvas-container"></div>
+        <!-- ASL Recognition App Container -->
+        <div id="asl-container">
+            <!-- Left panel - Minimalist display -->
+            <div id="left-panel">
+                <h2>Sign Detection</h2>
+
+                <!-- Prediction display -->
+                <div id="prediction-container">
+                    <div id="predicted-letter">—</div>
+                    <div id="confidence">Waiting for sign...</div>
+                </div>
+
+                <div id="status">Loading model...</div>
+
+                <!-- Minimal instructions -->
+                <div id="instructions">
+                    <p>Show an ASL sign to the camera</p>
+                </div>
+            </div>
+
+            <!-- Right panel - Camera feed -->
+            <div id="right-panel">
+                <div id="canvas-container"></div>
+            </div>
+        </div>
+
+        <!-- Information Section -->
+        <section style="margin-top: 60px; color: #aaa; line-height: 1.8;">
+            <h3 style="color: #00ffff; font-weight: 300; margin-bottom: 20px;">How to Use</h3>
+            <ol style="max-width: 800px;">
+                <li style="margin-bottom: 15px;">Allow camera access when prompted by your browser</li>
+                <li style="margin-bottom: 15px;">Position your hand clearly in front of the camera</li>
+                <li style="margin-bottom: 15px;">Make ASL alphabet signs (A-Z)</li>
+                <li style="margin-bottom: 15px;">The predicted letter will appear on the left with confidence percentage</li>
+            </ol>
+
+            <h3 style="color: #00ffff; font-weight: 300; margin: 40px 0 20px 0;">Setup Your Own Model</h3>
+            <p style="max-width: 800px; margin-bottom: 15px;">
+                This application requires a trained model from <a href="https://teachablemachine.withgoogle.com/" target="_blank" style="color: #00ffff;">Teachable Machine</a>.
+            </p>
+            <p style="max-width: 800px; color: #666;">
+                Train your model with ASL alphabet signs (A-Z), export it, and replace the <code style="background: #2a2a2a; padding: 3px 8px; border-radius: 4px; color: #00ffff;">modelURL</code> in the source code with your model's URL.
+            </p>
+        </section>
     </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Built with <a href="https://p5js.org/" target="_blank">p5.js</a> and <a href="https://ml5js.org/" target="_blank">ml5.js</a></p>
+    </footer>
 
     <!-- Load p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
@@ -43,126 +292,160 @@
         // GLOBAL VARIABLES
         // ==========================================
         let video;
-        let handpose;
-        let predictions = [];
+        let classifier;
         let modelReady = false;
+        let currentPrediction = '';
+        let currentConfidence = 0;
+
+        // Teachable Machine model URL
+        // IMPORTANT: Replace this URL with your own trained model from Teachable Machine
+        // To create your own model:
+        // 1. Go to https://teachablemachine.withgoogle.com/
+        // 2. Choose "Image Project" → "Standard image model"
+        // 3. Create classes for each ASL letter (A-Z)
+        // 4. Upload or capture training images for each letter
+        // 5. Train the model
+        // 6. Export → "Upload my model" → Copy the shareable link
+        // 7. Replace the URL below with your model URL
+
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/Md1wVGcGO/';
+
+        // Confidence threshold (80%)
+        const CONFIDENCE_THRESHOLD = 0.80;
 
         // ==========================================
         // P5.JS SETUP - Runs once at start
         // ==========================================
         function setup() {
-            // Create canvas matching video dimensions
-            let canvas = createCanvas(640, 480);
+            // Get the container dimensions
+            const container = document.getElementById('asl-container');
+            const containerWidth = container.offsetWidth / 2; // Half for right panel
+            const containerHeight = container.offsetHeight;
+
+            // Create canvas to fill the right half of the container
+            let canvas = createCanvas(containerWidth, containerHeight);
             canvas.parent('canvas-container');
 
             // Initialize webcam capture
             video = createCapture(VIDEO);
-            video.size(640, 480);
-            video.hide(); // Hide the default video element, we'll draw it on canvas
+            video.size(width, height);
+            video.hide(); // Hide default HTML video element
 
-            // Initialize the Handpose model
-            handpose = ml5.handpose(video, modelLoaded);
+            // Load the Teachable Machine image classification model
+            // The model consists of model.json and weights files
+            // Added error handling for model loading
+            try {
+                classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded, modelError);
+            } catch (error) {
+                modelError(error);
+            }
+        }
 
-            // Register callback for when predictions are ready
-            handpose.on('predict', gotHands);
+        // ==========================================
+        // WINDOW RESIZE - Adjust canvas when window resizes
+        // ==========================================
+        function windowResized() {
+            const container = document.getElementById('asl-container');
+            const containerWidth = container.offsetWidth / 2;
+            const containerHeight = container.offsetHeight;
+            resizeCanvas(containerWidth, containerHeight);
+            video.size(width, height);
         }
 
         // ==========================================
         // MODEL LOADED CALLBACK
         // ==========================================
         function modelLoaded() {
+            console.log('ASL model loaded successfully!');
             modelReady = true;
-            document.getElementById('status').textContent = 'Hand tracking ready! Show your hand to the camera.';
-            console.log('Handpose model loaded successfully');
+            document.getElementById('status').textContent = 'Model ready! Show an ASL sign.';
+            document.getElementById('status').style.color = '#00ff00';
+
+            // Start classifying the video feed
+            classifyVideo();
         }
 
         // ==========================================
-        // HAND DETECTION CALLBACK
+        // MODEL ERROR CALLBACK
         // ==========================================
-        function gotHands(results) {
-            predictions = results;
+        function modelError(error) {
+            console.error('Model loading error:', error);
+            document.getElementById('status').textContent = '⚠️ Model failed to load. Please train your own model.';
+            document.getElementById('status').style.color = '#ff6666';
+            document.getElementById('confidence').textContent = 'See instructions below to create your model';
+            document.getElementById('confidence').style.color = '#ff6666';
         }
 
         // ==========================================
-        // P5.JS DRAW - Runs continuously (animation loop)
+        // CLASSIFY VIDEO FEED CONTINUOUSLY
+        // ==========================================
+        function classifyVideo() {
+            // Classify the current video frame
+            // The classifier will call gotResult with predictions
+            classifier.classify(video, gotResult);
+        }
+
+        // ==========================================
+        // HANDLE CLASSIFICATION RESULTS
+        // ==========================================
+        function gotResult(error, results) {
+            // Handle any errors
+            if (error) {
+                console.error('Classification error:', error);
+                return;
+            }
+
+            // results is an array of predictions sorted by confidence
+            // results[0] is the most confident prediction
+            if (results && results.length > 0) {
+                const topPrediction = results[0];
+                currentPrediction = topPrediction.label;
+                currentConfidence = topPrediction.confidence;
+
+                // Update the display with the new prediction
+                updateDisplay();
+            }
+
+            // Continue classifying (recursive call for continuous predictions)
+            classifyVideo();
+        }
+
+        // ==========================================
+        // UPDATE PREDICTION DISPLAY
+        // ==========================================
+        function updateDisplay() {
+            const letterElement = document.getElementById('predicted-letter');
+            const confidenceElement = document.getElementById('confidence');
+
+            // Check if confidence meets threshold
+            if (currentConfidence >= CONFIDENCE_THRESHOLD) {
+                // High confidence - show the predicted letter
+                letterElement.textContent = currentPrediction;
+                letterElement.style.color = '#00ffff';
+
+                // Display confidence percentage
+                const confidencePercent = (currentConfidence * 100).toFixed(0);
+                confidenceElement.textContent = `${currentPrediction} — ${confidencePercent}%`;
+                confidenceElement.style.color = '#aaa';
+            } else {
+                // Low confidence - show unclear message
+                letterElement.textContent = '...';
+                letterElement.style.color = '#666';
+                confidenceElement.textContent = 'Unclear sign';
+                confidenceElement.style.color = '#666';
+            }
+        }
+
+        // ==========================================
+        // P5.JS DRAW - Runs continuously
         // ==========================================
         function draw() {
-            // Draw the webcam feed as background
+            // Draw the webcam feed to fill the entire canvas (mirrored for natural interaction)
+            push();
+            translate(width, 0);
+            scale(-1, 1); // Mirror the video horizontally
             image(video, 0, 0, width, height);
-
-            // Only draw hand landmarks if model is ready and hands are detected
-            if (modelReady && predictions.length > 0) {
-                drawHandSkeleton();
-            }
-        }
-
-        // ==========================================
-        // DRAW HAND SKELETON AND LANDMARKS
-        // ==========================================
-        function drawHandSkeleton() {
-            // Loop through all detected hands (typically just one)
-            for (let i = 0; i < predictions.length; i++) {
-                const hand = predictions[i];
-                const landmarks = hand.landmarks;
-
-                // Draw the skeleton connections first (so they appear behind the joints)
-                drawConnections(landmarks);
-
-                // Draw the landmark points (joints)
-                drawLandmarks(landmarks);
-            }
-        }
-
-        // ==========================================
-        // DRAW CONNECTIONS BETWEEN LANDMARKS
-        // ==========================================
-        function drawConnections(landmarks) {
-            // Set style for skeleton lines
-            stroke(255, 255, 255); // White color
-            strokeWeight(2); // Thin lines
-            noFill();
-
-            // Define the connections for the hand skeleton
-            // Each sub-array represents connected points forming fingers and palm
-            const connections = [
-                // Thumb
-                [0, 1, 2, 3, 4],
-                // Index finger
-                [0, 5, 6, 7, 8],
-                // Middle finger
-                [0, 9, 10, 11, 12],
-                // Ring finger
-                [0, 13, 14, 15, 16],
-                // Pinky
-                [0, 17, 18, 19, 20],
-                // Palm base connections
-                [5, 9, 13, 17]
-            ];
-
-            // Draw each connection path
-            for (let path of connections) {
-                beginShape();
-                for (let index of path) {
-                    const [x, y] = landmarks[index];
-                    vertex(x, y);
-                }
-                endShape();
-            }
-        }
-
-        // ==========================================
-        // DRAW LANDMARK POINTS (JOINTS)
-        // ==========================================
-        function drawLandmarks(landmarks) {
-            // Set style for landmark circles
-            fill(0, 255, 255, 180); // Soft cyan with transparency
-            noStroke();
-
-            // Draw a circle for each of the 21 landmarks
-            for (let i = 0; i < landmarks.length; i++) {
-                const [x, y] = landmarks[i];
-                circle(x, y, 8); // 8 pixel diameter circles
-            }
+            pop();
         }
     </script>
 </body>
