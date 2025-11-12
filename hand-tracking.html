@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Tracking with p5.js and ml5.js</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+        main {
+            text-align: center;
+        }
+        #status {
+            color: #ffffff;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div id="status">Loading hand tracking model...</div>
+        <div id="canvas-container"></div>
+    </main>
+
+    <!-- Load p5.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+    <!-- Load ml5.js library -->
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+
+    <script>
+        // ==========================================
+        // GLOBAL VARIABLES
+        // ==========================================
+        let video;
+        let handpose;
+        let predictions = [];
+        let modelReady = false;
+
+        // ==========================================
+        // P5.JS SETUP - Runs once at start
+        // ==========================================
+        function setup() {
+            // Create canvas matching video dimensions
+            let canvas = createCanvas(640, 480);
+            canvas.parent('canvas-container');
+
+            // Initialize webcam capture
+            video = createCapture(VIDEO);
+            video.size(640, 480);
+            video.hide(); // Hide the default video element, we'll draw it on canvas
+
+            // Initialize the Handpose model
+            handpose = ml5.handpose(video, modelLoaded);
+
+            // Register callback for when predictions are ready
+            handpose.on('predict', gotHands);
+        }
+
+        // ==========================================
+        // MODEL LOADED CALLBACK
+        // ==========================================
+        function modelLoaded() {
+            modelReady = true;
+            document.getElementById('status').textContent = 'Hand tracking ready! Show your hand to the camera.';
+            console.log('Handpose model loaded successfully');
+        }
+
+        // ==========================================
+        // HAND DETECTION CALLBACK
+        // ==========================================
+        function gotHands(results) {
+            predictions = results;
+        }
+
+        // ==========================================
+        // P5.JS DRAW - Runs continuously (animation loop)
+        // ==========================================
+        function draw() {
+            // Draw the webcam feed as background
+            image(video, 0, 0, width, height);
+
+            // Only draw hand landmarks if model is ready and hands are detected
+            if (modelReady && predictions.length > 0) {
+                drawHandSkeleton();
+            }
+        }
+
+        // ==========================================
+        // DRAW HAND SKELETON AND LANDMARKS
+        // ==========================================
+        function drawHandSkeleton() {
+            // Loop through all detected hands (typically just one)
+            for (let i = 0; i < predictions.length; i++) {
+                const hand = predictions[i];
+                const landmarks = hand.landmarks;
+
+                // Draw the skeleton connections first (so they appear behind the joints)
+                drawConnections(landmarks);
+
+                // Draw the landmark points (joints)
+                drawLandmarks(landmarks);
+            }
+        }
+
+        // ==========================================
+        // DRAW CONNECTIONS BETWEEN LANDMARKS
+        // ==========================================
+        function drawConnections(landmarks) {
+            // Set style for skeleton lines
+            stroke(255, 255, 255); // White color
+            strokeWeight(2); // Thin lines
+            noFill();
+
+            // Define the connections for the hand skeleton
+            // Each sub-array represents connected points forming fingers and palm
+            const connections = [
+                // Thumb
+                [0, 1, 2, 3, 4],
+                // Index finger
+                [0, 5, 6, 7, 8],
+                // Middle finger
+                [0, 9, 10, 11, 12],
+                // Ring finger
+                [0, 13, 14, 15, 16],
+                // Pinky
+                [0, 17, 18, 19, 20],
+                // Palm base connections
+                [5, 9, 13, 17]
+            ];
+
+            // Draw each connection path
+            for (let path of connections) {
+                beginShape();
+                for (let index of path) {
+                    const [x, y] = landmarks[index];
+                    vertex(x, y);
+                }
+                endShape();
+            }
+        }
+
+        // ==========================================
+        // DRAW LANDMARK POINTS (JOINTS)
+        // ==========================================
+        function drawLandmarks(landmarks) {
+            // Set style for landmark circles
+            fill(0, 255, 255, 180); // Soft cyan with transparency
+            noStroke();
+
+            // Draw a circle for each of the 21 landmarks
+            for (let i = 0; i < landmarks.length; i++) {
+                const [x, y] = landmarks[i];
+                circle(x, y, 8); // 8 pixel diameter circles
+            }
+        }
+    </script>
+</body>
+</html>
