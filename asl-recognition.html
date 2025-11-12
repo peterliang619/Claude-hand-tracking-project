@@ -15,20 +15,48 @@
         }
 
         body {
-            background-color: #1a1a1a;
+            background-color: #0d0d0d;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* Page header */
+        header {
+            background-color: #1a1a1a;
+            padding: 20px 40px;
+            border-bottom: 1px solid #333;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        /* Main content wrapper */
+        main {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* ASL Recognition container */
+        #asl-container {
             display: flex;
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            height: 700px;
         }
 
         /* Left panel - Minimalist info display */
         #left-panel {
             width: 50%;
-            height: 100vh;
             background-color: #1a1a1a;
             display: flex;
             flex-direction: column;
@@ -41,7 +69,6 @@
         /* Right panel - Camera feed */
         #right-panel {
             width: 50%;
-            height: 100vh;
             background-color: #000;
             display: flex;
             justify-content: center;
@@ -49,11 +76,30 @@
             position: relative;
         }
 
-        h1 {
+        #left-panel h2 {
             font-size: 2.5em;
-            margin-bottom: 60px;
+            margin: 0 0 60px 0;
             font-weight: 300;
             letter-spacing: 2px;
+        }
+
+        /* Footer section */
+        footer {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: #00ffff;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
         }
 
         #status {
@@ -118,31 +164,122 @@
         .model-note strong {
             color: #00ffff;
         }
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 1024px) {
+            #asl-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            #left-panel, #right-panel {
+                width: 100%;
+            }
+
+            #left-panel {
+                padding: 30px 20px;
+            }
+
+            #right-panel {
+                height: 500px;
+            }
+
+            #left-panel h2 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+
+            #predicted-letter {
+                font-size: 8em;
+            }
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 15px 20px;
+            }
+
+            header h1 {
+                font-size: 1.3em;
+            }
+
+            main {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+
+            #asl-container {
+                border-radius: 8px;
+            }
+
+            #predicted-letter {
+                font-size: 6em;
+            }
+
+            #right-panel {
+                height: 400px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Left panel - Minimalist display -->
-    <div id="left-panel">
-        <h1>ASL Recognition</h1>
+    <!-- Page Header -->
+    <header>
+        <h1>ASL Alphabet Recognition</h1>
+    </header>
 
-        <!-- Prediction display -->
-        <div id="prediction-container">
-            <div id="predicted-letter">—</div>
-            <div id="confidence">Waiting for sign...</div>
+    <!-- Main Content -->
+    <main>
+        <!-- ASL Recognition App Container -->
+        <div id="asl-container">
+            <!-- Left panel - Minimalist display -->
+            <div id="left-panel">
+                <h2>Sign Detection</h2>
+
+                <!-- Prediction display -->
+                <div id="prediction-container">
+                    <div id="predicted-letter">—</div>
+                    <div id="confidence">Waiting for sign...</div>
+                </div>
+
+                <div id="status">Loading model...</div>
+
+                <!-- Minimal instructions -->
+                <div id="instructions">
+                    <p>Show an ASL sign to the camera</p>
+                </div>
+            </div>
+
+            <!-- Right panel - Camera feed -->
+            <div id="right-panel">
+                <div id="canvas-container"></div>
+            </div>
         </div>
 
-        <div id="status">Loading model...</div>
+        <!-- Information Section -->
+        <section style="margin-top: 60px; color: #aaa; line-height: 1.8;">
+            <h3 style="color: #00ffff; font-weight: 300; margin-bottom: 20px;">How to Use</h3>
+            <ol style="max-width: 800px;">
+                <li style="margin-bottom: 15px;">Allow camera access when prompted by your browser</li>
+                <li style="margin-bottom: 15px;">Position your hand clearly in front of the camera</li>
+                <li style="margin-bottom: 15px;">Make ASL alphabet signs (A-Z)</li>
+                <li style="margin-bottom: 15px;">The predicted letter will appear on the left with confidence percentage</li>
+            </ol>
 
-        <!-- Minimal instructions -->
-        <div id="instructions">
-            <p>Show an ASL sign to the camera</p>
-        </div>
-    </div>
+            <h3 style="color: #00ffff; font-weight: 300; margin: 40px 0 20px 0;">Setup Your Own Model</h3>
+            <p style="max-width: 800px; margin-bottom: 15px;">
+                This application requires a trained model from <a href="https://teachablemachine.withgoogle.com/" target="_blank" style="color: #00ffff;">Teachable Machine</a>.
+            </p>
+            <p style="max-width: 800px; color: #666;">
+                Train your model with ASL alphabet signs (A-Z), export it, and replace the <code style="background: #2a2a2a; padding: 3px 8px; border-radius: 4px; color: #00ffff;">modelURL</code> in the source code with your model's URL.
+            </p>
+        </section>
+    </main>
 
-    <!-- Right panel - Camera feed -->
-    <div id="right-panel">
-        <div id="canvas-container"></div>
-    </div>
+    <!-- Footer -->
+    <footer>
+        <p>Built with <a href="https://p5js.org/" target="_blank">p5.js</a> and <a href="https://ml5js.org/" target="_blank">ml5.js</a></p>
+    </footer>
 
     <!-- Load p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
@@ -180,8 +317,13 @@
         // P5.JS SETUP - Runs once at start
         // ==========================================
         function setup() {
-            // Create canvas to fill the right half of the screen
-            let canvas = createCanvas(windowWidth / 2, windowHeight);
+            // Get the container dimensions
+            const container = document.getElementById('asl-container');
+            const containerWidth = container.offsetWidth / 2; // Half for right panel
+            const containerHeight = container.offsetHeight;
+
+            // Create canvas to fill the right half of the container
+            let canvas = createCanvas(containerWidth, containerHeight);
             canvas.parent('canvas-container');
 
             // Initialize webcam capture
@@ -203,7 +345,10 @@
         // WINDOW RESIZE - Adjust canvas when window resizes
         // ==========================================
         function windowResized() {
-            resizeCanvas(windowWidth / 2, windowHeight);
+            const container = document.getElementById('asl-container');
+            const containerWidth = container.offsetWidth / 2;
+            const containerHeight = container.offsetHeight;
+            resizeCanvas(containerWidth, containerHeight);
             video.size(width, height);
         }
 
