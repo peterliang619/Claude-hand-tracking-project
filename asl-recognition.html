@@ -124,9 +124,17 @@
     <div id="instructions">
         <p>Show an ASL alphabet sign to your webcam. The recognized letter will appear above.</p>
         <div class="model-note">
-            <strong>Note:</strong> This demo uses a Teachable Machine model.
-            For best results, ensure good lighting and position your hand clearly in frame.
-            Model is trained on ASL alphabet signs A-Z.
+            <strong>⚠️ Important:</strong> You need to train your own ASL model for this to work!<br><br>
+            <strong>How to create your ASL model:</strong><br>
+            1. Visit <a href="https://teachablemachine.withgoogle.com/" target="_blank" style="color: #00ffff;">teachablemachine.withgoogle.com</a><br>
+            2. Click "Get Started" → "Image Project" → "Standard image model"<br>
+            3. Create 26 classes (one for each letter A-Z)<br>
+            4. For each class, use your webcam to capture 50-100 images of that ASL sign<br>
+            5. Click "Train Model" and wait for training to complete<br>
+            6. Click "Export Model" → "Upload my model"<br>
+            7. Copy the shareable link (e.g., https://teachablemachine.withgoogle.com/models/xxxxx/)<br>
+            8. Replace the <code style="background: #1a1a1a; padding: 2px 5px; border-radius: 3px;">modelURL</code> in the code with your link<br><br>
+            <strong>Tip:</strong> For best results, capture images with varied hand positions and lighting conditions!
         </div>
     </div>
 
@@ -147,9 +155,17 @@
         let currentConfidence = 0;
 
         // Teachable Machine model URL
-        // This is a pretrained ASL alphabet model from Teachable Machine
-        // You can replace this with your own model URL from https://teachablemachine.withgoogle.com/
-        const modelURL = 'https://teachablemachine.withgoogle.com/models/c0k2P8dgS/';
+        // IMPORTANT: Replace this URL with your own trained model from Teachable Machine
+        // To create your own model:
+        // 1. Go to https://teachablemachine.withgoogle.com/
+        // 2. Choose "Image Project" → "Standard image model"
+        // 3. Create classes for each ASL letter (A-Z)
+        // 4. Upload or capture training images for each letter
+        // 5. Train the model
+        // 6. Export → "Upload my model" → Copy the shareable link
+        // 7. Replace the URL below with your model URL
+
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/Md1wVGcGO/';
 
         // Confidence threshold (80%)
         const CONFIDENCE_THRESHOLD = 0.80;
@@ -169,7 +185,12 @@
 
             // Load the Teachable Machine image classification model
             // The model consists of model.json and weights files
-            classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded);
+            // Added error handling for model loading
+            try {
+                classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded, modelError);
+            } catch (error) {
+                modelError(error);
+            }
         }
 
         // ==========================================
@@ -179,9 +200,21 @@
             console.log('ASL model loaded successfully!');
             modelReady = true;
             document.getElementById('status').textContent = 'Model ready! Show an ASL sign.';
+            document.getElementById('status').style.color = '#00ff00';
 
             // Start classifying the video feed
             classifyVideo();
+        }
+
+        // ==========================================
+        // MODEL ERROR CALLBACK
+        // ==========================================
+        function modelError(error) {
+            console.error('Model loading error:', error);
+            document.getElementById('status').textContent = '⚠️ Model failed to load. Please train your own model.';
+            document.getElementById('status').style.color = '#ff6666';
+            document.getElementById('confidence').textContent = 'See instructions below to create your model';
+            document.getElementById('confidence').style.color = '#ff6666';
         }
 
         // ==========================================
