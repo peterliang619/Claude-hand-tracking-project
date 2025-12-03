@@ -107,6 +107,38 @@
             text-transform: uppercase;
         }
 
+        /* Hand detection indicator */
+        #hand-indicator {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.6em;
+            color: #333;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        #hand-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #222;
+            transition: background-color 0.3s ease;
+        }
+
+        #hand-indicator.active #hand-indicator-dot {
+            background-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        #hand-indicator.active {
+            color: #666;
+        }
+
         #status {
             display: none;
             font-size: 0.65em;
@@ -306,6 +338,12 @@
     <!-- Level indicator -->
     <div id="level-indicator">level —</div>
 
+    <!-- Hand detection indicator -->
+    <div id="hand-indicator">
+        <div id="hand-indicator-dot"></div>
+        <span>hand tracking</span>
+    </div>
+
     <!-- Left panel - Minimalist display -->
     <div id="left-panel">
         <h2>Start your sign language learning</h2>
@@ -356,6 +394,9 @@
         let currentPrediction = '';
         let currentConfidence = 0;
         let isClassifying = false; // Prevent overlapping API calls
+        let handDetected = false; // Track if hand is currently visible
+        let noHandFrameCount = 0; // Count frames without hand detection
+        const NO_HAND_THRESHOLD = 3; // Show "no hand" message after 3 frames
 
         // Word spelling for level 1
         const targetWord = 'ABCDE';
@@ -366,8 +407,8 @@
         const HF_API_URL = 'https://api-inference.huggingface.co/models/aalof/clipvision-asl-fingerspelling';
         const HF_API_TOKEN = ''; // Optional: Add your HF token for higher rate limits
 
-        // Classification interval (ms) - slower to avoid rate limits
-        const CLASSIFICATION_INTERVAL = 500; // Classify every 500ms
+        // Classification interval (ms) - faster with hand detection optimization
+        const CLASSIFICATION_INTERVAL = 300; // Classify every 300ms when hand is detected
 
         // ==========================================
         // LEVEL MANAGEMENT
@@ -457,7 +498,15 @@
         function loadHandpose() {
             // Try to load handpose, but don't break if ml5.handpose isn't available
             if (typeof ml5 !== 'undefined' && ml5.handpose) {
-                handpose = ml5.handpose(video, handposeLoaded);
+                // Configure handpose with optimized settings for better sensitivity
+                const options = {
+                    maxContinuousChecks: 5,  // Check more frequently for hands
+                    detectionConfidence: 0.7, // Lower threshold = more sensitive (default is 0.8)
+                    maxNumHands: 1,           // Only track one hand for better performance
+                    scoreThreshold: 0.6       // Lower threshold for landmark detection
+                };
+
+                handpose = ml5.handpose(video, options, handposeLoaded);
                 handpose.on('predict', gotHands);
             } else {
                 console.log('Handpose not available - skipping hand tracking visualization');
@@ -478,6 +527,36 @@
         // ==========================================
         function gotHands(results) {
             predictions = results;
+
+            // Update hand indicator visual
+            const handIndicator = document.getElementById('hand-indicator');
+
+            // Track if hand is detected
+            if (results && results.length > 0) {
+                handDetected = true;
+                noHandFrameCount = 0;
+                if (handIndicator) {
+                    handIndicator.classList.add('active');
+                }
+            } else {
+                handDetected = false;
+                noHandFrameCount++;
+                if (handIndicator) {
+                    handIndicator.classList.remove('active');
+                }
+
+                // Show "no hand" feedback after threshold
+                if (noHandFrameCount > NO_HAND_THRESHOLD) {
+                    currentPrediction = '';
+                    currentConfidence = 0;
+                    const letterElement = document.getElementById('predicted-letter');
+                    const confidenceElement = document.getElementById('confidence');
+                    letterElement.textContent = '—';
+                    letterElement.style.color = '#222';
+                    confidenceElement.textContent = 'show hand';
+                    confidenceElement.style.color = '#333';
+                }
+            }
         }
 
         // ==========================================
@@ -493,7 +572,11 @@
         function classifyVideoLoop() {
             // Call classification function repeatedly
             setInterval(async () => {
-                if (!isClassifying) {
+                // Only classify if:
+                // 1. Not currently classifying
+                // 2. Hand is detected (more efficient, saves API calls)
+                // 3. OR handpose not loaded yet (fallback to continuous classification)
+                if (!isClassifying && (handDetected || !handposeReady)) {
                     await classifyFrame();
                 }
             }, CLASSIFICATION_INTERVAL);
@@ -715,9 +798,9 @@
         // DRAW CONNECTIONS BETWEEN LANDMARKS
         // ==========================================
         function drawConnections(landmarks) {
-            // Set style for skeleton lines - minimalist white lines
-            stroke(255, 255, 255, 150);
-            strokeWeight(1.5);
+            // Set style for skeleton lines - brighter and thicker for better visibility
+            stroke(255, 255, 255, 200);
+            strokeWeight(2.5);
             noFill();
 
             // Define the connections for the hand skeleton
@@ -751,14 +834,19 @@
         // DRAW LANDMARK POINTS (JOINTS)
         // ==========================================
         function drawLandmarks(landmarks) {
-            // Set style for landmark circles - subtle cyan
-            fill(0, 255, 255, 120);
+            // Set style for landmark circles - brighter cyan with glow
+            fill(0, 255, 255, 180);
             noStroke();
 
             // Draw a circle for each of the 21 landmarks
             for (let i = 0; i < landmarks.length; i++) {
                 const [x, y] = landmarks[i];
-                circle(x, y, 6);
+                // Draw glow effect
+                fill(0, 255, 255, 40);
+                circle(x, y, 12);
+                // Draw main point
+                fill(0, 255, 255, 220);
+                circle(x, y, 7);
             }
         }
 
