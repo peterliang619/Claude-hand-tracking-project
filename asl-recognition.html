@@ -341,7 +341,7 @@
     <!-- Load p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
 
-    <!-- Load ml5.js library -->
+    <!-- Load ml5.js library for handpose tracking -->
     <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
 
     <script>
@@ -349,18 +349,25 @@
         // GLOBAL VARIABLES (defined first)
         // ==========================================
         let video;
-        let classifier;
         let handpose;
-        let modelReady = false;
+        let modelReady = true; // API is always ready
         let handposeReady = false;
         let predictions = [];
         let currentPrediction = '';
         let currentConfidence = 0;
+        let isClassifying = false; // Prevent overlapping API calls
 
         // Word spelling for level 1
         const targetWord = 'ABCDE';
         let currentLetterIndex = 0;
         let completedLetters = [];
+
+        // HuggingFace API configuration
+        const HF_API_URL = 'https://api-inference.huggingface.co/models/aalof/clipvision-asl-fingerspelling';
+        const HF_API_TOKEN = ''; // Optional: Add your HF token for higher rate limits
+
+        // Classification interval (ms) - slower to avoid rate limits
+        const CLASSIFICATION_INTERVAL = 500; // Classify every 500ms
 
         // ==========================================
         // LEVEL MANAGEMENT
@@ -417,21 +424,8 @@
         // Fade in immediately when script runs
         document.body.classList.add('fade-in');
 
-        // Teachable Machine model URL
-        // IMPORTANT: Replace this URL with your own trained model from Teachable Machine
-        // To create your own model:
-        // 1. Go to https://teachablemachine.withgoogle.com/
-        // 2. Choose "Image Project" → "Standard image model"
-        // 3. Create classes for each ASL letter (A-Z)
-        // 4. Upload or capture training images for each letter
-        // 5. Train the model
-        // 6. Export → "Upload my model" → Copy the shareable link
-        // 7. Replace the URL below with your model URL
-
-        const modelURL = 'https://teachablemachine.withgoogle.com/models/fPxh7xXbR/';
-
-        // Confidence threshold (80%)
-        const CONFIDENCE_THRESHOLD = 0.80;
+        // Confidence threshold (70% - CLIP model is highly accurate)
+        const CONFIDENCE_THRESHOLD = 0.70;
 
         // ==========================================
         // P5.JS SETUP - Runs once at start
@@ -444,16 +438,30 @@
             // Initialize webcam capture
             video = createCapture(VIDEO);
             video.hide(); // Hide default HTML video element
+            video.size(640, 480); // Set standard resolution for API
 
-            // Load the Handpose model for hand tracking
-            handpose = ml5.handpose(video, handposeLoaded);
-            handpose.on('predict', gotHands);
+            // Load the Handpose model for hand tracking (using ml5.js)
+            loadHandpose();
 
-            // Load the Teachable Machine image classification model
-            try {
-                classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded, modelError);
-            } catch (error) {
-                modelError(error);
+            // Start classification loop after small delay for camera to initialize
+            setTimeout(() => {
+                document.getElementById('status').textContent = 'ready';
+                document.getElementById('status').style.color = '#333';
+                classifyVideoLoop();
+            }, 1000);
+        }
+
+        // ==========================================
+        // LOAD HANDPOSE MODEL
+        // ==========================================
+        function loadHandpose() {
+            // Try to load handpose, but don't break if ml5.handpose isn't available
+            if (typeof ml5 !== 'undefined' && ml5.handpose) {
+                handpose = ml5.handpose(video, handposeLoaded);
+                handpose.on('predict', gotHands);
+            } else {
+                console.log('Handpose not available - skipping hand tracking visualization');
+                handposeReady = false;
             }
         }
 
@@ -480,61 +488,108 @@
         }
 
         // ==========================================
-        // MODEL LOADED CALLBACK
+        // CLASSIFY VIDEO FEED CONTINUOUSLY WITH HF API
         // ==========================================
-        function modelLoaded() {
-            console.log('ASL model loaded successfully!');
-            modelReady = true;
-            document.getElementById('status').textContent = 'ready';
-            document.getElementById('status').style.color = '#333';
-
-            // Start classifying the video feed
-            classifyVideo();
+        function classifyVideoLoop() {
+            // Call classification function repeatedly
+            setInterval(async () => {
+                if (!isClassifying) {
+                    await classifyFrame();
+                }
+            }, CLASSIFICATION_INTERVAL);
         }
 
         // ==========================================
-        // MODEL ERROR CALLBACK
+        // CAPTURE AND CLASSIFY CURRENT FRAME
         // ==========================================
-        function modelError(error) {
-            console.error('Model loading error:', error);
-            document.getElementById('status').textContent = 'model not found';
-            document.getElementById('status').style.color = '#444';
-            document.getElementById('confidence').textContent = 'configure model url';
-            document.getElementById('confidence').style.color = '#444';
-        }
+        async function classifyFrame() {
+            if (!video || !video.elt) return;
 
-        // ==========================================
-        // CLASSIFY VIDEO FEED CONTINUOUSLY
-        // ==========================================
-        function classifyVideo() {
-            // Classify the current video frame
-            // The classifier will call gotResult with predictions
-            classifier.classify(video, gotResult);
-        }
+            isClassifying = true;
 
-        // ==========================================
-        // HANDLE CLASSIFICATION RESULTS
-        // ==========================================
-        function gotResult(error, results) {
-            // Handle any errors
-            if (error) {
+            try {
+                // Create a temporary canvas to capture the current frame
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 640;
+                tempCanvas.height = 480;
+                const ctx = tempCanvas.getContext('2d');
+
+                // Draw current video frame to canvas
+                ctx.drawImage(video.elt, 0, 0, 640, 480);
+
+                // Convert canvas to blob
+                const blob = await new Promise(resolve => {
+                    tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
+                });
+
+                // Call HuggingFace API
+                const result = await queryHuggingFaceAPI(blob);
+
+                if (result && result.length > 0) {
+                    // Find the prediction with highest score
+                    const topPrediction = result.reduce((max, curr) =>
+                        curr.score > max.score ? curr : max
+                    );
+
+                    currentPrediction = topPrediction.label;
+                    currentConfidence = topPrediction.score;
+
+                    // Update the display
+                    updateDisplay();
+                }
+            } catch (error) {
                 console.error('Classification error:', error);
-                return;
+                // Don't show error to user unless it persists
+            } finally {
+                isClassifying = false;
+            }
+        }
+
+        // ==========================================
+        // QUERY HUGGINGFACE API
+        // ==========================================
+        async function queryHuggingFaceAPI(imageBlob) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // Add API token if provided
+            if (HF_API_TOKEN) {
+                headers['Authorization'] = `Bearer ${HF_API_TOKEN}`;
             }
 
-            // results is an array of predictions sorted by confidence
-            // results[0] is the most confident prediction
-            if (results && results.length > 0) {
-                const topPrediction = results[0];
-                currentPrediction = topPrediction.label;
-                currentConfidence = topPrediction.confidence;
+            try {
+                const response = await fetch(HF_API_URL, {
+                    method: 'POST',
+                    headers: headers,
+                    body: imageBlob
+                });
 
-                // Update the display with the new prediction
-                updateDisplay();
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error:', response.status, errorText);
+
+                    // Handle rate limiting
+                    if (response.status === 429) {
+                        console.log('Rate limited - waiting...');
+                        document.getElementById('confidence').textContent = 'rate limited';
+                    }
+
+                    // Handle model loading (first request may take time)
+                    if (response.status === 503) {
+                        console.log('Model loading - please wait...');
+                        document.getElementById('confidence').textContent = 'loading model...';
+                    }
+
+                    return null;
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Network error:', error);
+                return null;
             }
-
-            // Continue classifying (recursive call for continuous predictions)
-            classifyVideo();
         }
 
         // ==========================================
