@@ -586,9 +586,13 @@
         // CAPTURE AND CLASSIFY CURRENT FRAME
         // ==========================================
         async function classifyFrame() {
-            if (!video || !video.elt) return;
+            if (!video || !video.elt) {
+                console.log('Video not ready');
+                return;
+            }
 
             isClassifying = true;
+            console.log('Classifying frame... Hand detected:', handDetected);
 
             try {
                 // Create a temporary canvas to capture the current frame
@@ -605,6 +609,7 @@
                     tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
                 });
 
+                console.log('Sending to HuggingFace API...');
                 // Call HuggingFace API
                 const result = await queryHuggingFaceAPI(blob);
 
@@ -617,8 +622,12 @@
                     currentPrediction = topPrediction.label;
                     currentConfidence = topPrediction.score;
 
+                    console.log('Prediction:', currentPrediction, 'Confidence:', currentConfidence);
+
                     // Update the display
                     updateDisplay();
+                } else {
+                    console.log('No valid result from API');
                 }
             } catch (error) {
                 console.error('Classification error:', error);
@@ -632,9 +641,7 @@
         // QUERY HUGGINGFACE API
         // ==========================================
         async function queryHuggingFaceAPI(imageBlob) {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
+            const headers = {};
 
             // Add API token if provided
             if (HF_API_TOKEN) {
@@ -668,6 +675,7 @@
                 }
 
                 const result = await response.json();
+                console.log('API Response:', result); // Debug logging
                 return result;
             } catch (error) {
                 console.error('Network error:', error);
