@@ -65,6 +65,41 @@
             color: #5a4d44;
             text-align: center;
             user-select: none;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 0;
+            animation: revealText 2s ease-in-out forwards;
+        }
+
+        @keyframes revealText {
+            to {
+                width: 100%;
+            }
+        }
+
+        /* Description text */
+        .description {
+            margin-top: 40px;
+            font-size: 0.85em;
+            color: #8b7e74;
+            letter-spacing: 3px;
+            text-align: center;
+            font-weight: 300;
+            max-width: 500px;
+            line-height: 1.8;
+            opacity: 0;
+            animation: fadeInDesc 0.5s ease-in-out 2s forwards;
+        }
+
+        @keyframes fadeInDesc {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .description span {
+            opacity: 0;
+            animation: typeChar 0.05s ease-in-out forwards;
         }
 
         /* Subtle hint text */
@@ -76,6 +111,27 @@
             letter-spacing: 4px;
             text-transform: lowercase;
             font-weight: 400;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out 3.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes typeChar {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Content container */
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         /* Custom cursor */
@@ -119,7 +175,10 @@
     <div class="cursor-circle"></div>
 
     <div id="landing-overlay">
-        <h1>Unspoken.</h1>
+        <div class="content">
+            <h1>Unspoken.</h1>
+            <div class="description" id="description"></div>
+        </div>
         <div class="hint">click to enter</div>
     </div>
 
@@ -142,6 +201,24 @@
 
         // Fade in immediately when script runs
         overlay.classList.add('fade-in');
+
+        // ==========================================
+        // TYPING ANIMATION FOR DESCRIPTION
+        // ==========================================
+        const descriptionText = "Learn American Sign Language through interactive hand tracking. Express yourself without words.";
+        const descriptionElement = document.getElementById('description');
+
+        function typeDescription() {
+            const chars = descriptionText.split('');
+            chars.forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.animationDelay = `${2 + index * 0.05}s`;
+                descriptionElement.appendChild(span);
+            });
+        }
+
+        typeDescription();
 
         // ==========================================
         // CUSTOM CURSOR TRACKING
