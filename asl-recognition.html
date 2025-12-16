@@ -15,8 +15,8 @@
         }
 
         body {
-            background-color: #000000;
-            color: #ffffff;
+            background: linear-gradient(to bottom, #f5f0eb 0%, #e8dfd6 100%);
+            color: #8b7e74;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             margin: 0;
             padding: 0;
@@ -24,7 +24,7 @@
             overflow: hidden;
             display: flex;
             opacity: 0;
-            transition: opacity 0.8s ease;
+            transition: opacity 1.2s ease;
             cursor: none;
         }
 
@@ -42,7 +42,7 @@
         #left-panel {
             width: 50%;
             height: 100vh;
-            background-color: #000000;
+            background: transparent;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -55,7 +55,7 @@
         #right-panel {
             width: 50%;
             height: 100vh;
-            background-color: #000000;
+            background: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -63,57 +63,58 @@
         }
 
         #left-panel h2 {
-            font-size: 0.75em;
+            font-size: 0.7em;
             margin: 0 0 80px 0;
-            font-weight: 400;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: #666;
+            font-weight: 300;
+            letter-spacing: 5px;
+            text-transform: lowercase;
+            color: #bfb3a8;
         }
 
         /* Back button */
         #back-button {
             position: absolute;
-            top: 30px;
-            left: 30px;
+            top: 40px;
+            left: 40px;
             background: transparent;
-            border: 1px solid #333;
-            color: #666;
+            border: 1px solid rgba(191, 179, 168, 0.3);
+            color: #bfb3a8;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 0.7em;
+            font-size: 0.65em;
             font-weight: 300;
-            padding: 10px 20px;
+            padding: 12px 24px;
             cursor: pointer;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            transition: all 0.4s ease;
+            border-radius: 20px;
         }
 
         #back-button:hover {
-            border-color: #666;
-            color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.03);
+            border-color: rgba(139, 126, 116, 0.5);
+            color: #8b7e74;
+            background-color: rgba(255, 255, 255, 0.3);
         }
 
         /* Level indicator */
         #level-indicator {
             position: absolute;
-            top: 30px;
-            right: 30px;
-            font-size: 0.7em;
-            color: #444;
+            top: 40px;
+            right: 40px;
+            font-size: 0.65em;
+            color: #d4c9be;
             font-weight: 300;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-transform: lowercase;
         }
 
         #status {
             display: none;
-            font-size: 0.65em;
+            font-size: 0.6em;
             margin-top: 80px;
-            color: #444;
+            color: #d4c9be;
             font-weight: 300;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
 
         /* Prediction display area */
@@ -122,24 +123,24 @@
         }
 
         #predicted-letter {
-            font-size: 12em;
+            font-size: 10em;
             font-weight: 200;
             margin-bottom: 30px;
-            color: #ffffff;
+            color: #a89a8e;
             line-height: 1;
         }
 
         #confidence {
-            font-size: 0.85em;
-            color: #555;
+            font-size: 0.8em;
+            color: #c4b5a8;
             font-weight: 300;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
 
-        /* Word spelling display for level 1 */
+        /* Word spelling display for all levels */
         #word-display {
             display: none;
-            margin-top: 60px;
+            margin-top: 80px;
             text-align: center;
         }
 
@@ -151,45 +152,50 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 40px;
+            gap: 30px;
+            flex-wrap: wrap;
+            max-width: 90%;
+            margin: 0 auto;
         }
 
         .letter-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .word-letter {
-            font-size: 4em;
+            font-size: 3em;
             font-weight: 200;
             letter-spacing: 2px;
-            color: #333;
-            transition: color 0.5s ease;
+            color: #d4c9be;
+            transition: color 0.8s ease;
         }
 
         .word-letter.completed {
-            color: #ffffff;
+            color: #a89a8e;
         }
 
         .letter-image {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             object-fit: contain;
-            opacity: 0.3;
-            transition: opacity 0.5s ease;
+            opacity: 0.2;
+            transition: opacity 0.8s ease;
+            border-radius: 8px;
         }
 
         .letter-image.completed {
-            opacity: 1;
+            opacity: 0.7;
         }
 
         #word-instruction {
-            font-size: 0.7em;
-            color: #555;
-            margin-top: 20px;
-            letter-spacing: 2px;
+            font-size: 0.65em;
+            color: #c4b5a8;
+            margin-top: 25px;
+            letter-spacing: 3px;
+            font-weight: 300;
         }
 
         /* Canvas container */
@@ -222,15 +228,15 @@
             left: 0;
             width: 100%;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(245, 240, 235, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 2000;
             opacity: 0;
-            transition: opacity 0.8s ease;
+            transition: opacity 1.2s ease;
         }
 
         #congrats-overlay.show {
@@ -243,55 +249,55 @@
         }
 
         #congrats-message {
-            font-size: 3em;
-            font-weight: 200;
-            letter-spacing: 8px;
-            color: #ffffff;
+            font-size: 2.5em;
+            font-weight: 300;
+            letter-spacing: 10px;
+            color: #a89a8e;
             margin-bottom: 30px;
             text-transform: lowercase;
         }
 
         #congrats-submessage {
-            font-size: 1em;
-            color: #666;
-            letter-spacing: 3px;
+            font-size: 0.9em;
+            color: #c4b5a8;
+            letter-spacing: 4px;
             font-weight: 300;
         }
 
         /* Custom cursor */
         .cursor-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #ffffff;
+            width: 6px;
+            height: 6px;
+            background-color: #c4b5a8;
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
             z-index: 9999;
-            transition: transform 0.15s ease;
+            transition: transform 0.2s ease;
             transform: translate(-50%, -50%);
         }
 
         .cursor-circle {
-            width: 40px;
-            height: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(139, 126, 116, 0.2);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
             z-index: 9998;
-            transition: transform 0.2s ease;
+            transition: transform 0.25s ease;
             transform: translate(-50%, -50%);
         }
 
         #back-button:hover ~ .cursor-dot,
         button:hover ~ .cursor-dot {
-            transform: translate(-50%, -50%) scale(1.5);
+            transform: translate(-50%, -50%) scale(1.3);
         }
 
         #back-button:hover ~ .cursor-circle,
         button:hover ~ .cursor-circle {
-            transform: translate(-50%, -50%) scale(1.5);
-            border-color: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%) scale(1.3);
+            border-color: rgba(139, 126, 116, 0.35);
         }
     </style>
 </head>
@@ -357,8 +363,13 @@
         let currentPrediction = '';
         let currentConfidence = 0;
 
-        // Word spelling for level 1
-        const targetWord = 'ABCDE';
+        // Word spelling for different levels
+        const levelWords = {
+            '1': 'ABCDE',
+            '2': 'LEARN',
+            '3': 'COMMUNICATE'
+        };
+        const targetWord = levelWords[selectedLevel] || 'ABCDE';
         let currentLetterIndex = 0;
         let completedLetters = [];
 
@@ -371,8 +382,8 @@
         // Update level indicator
         document.getElementById('level-indicator').textContent = `level ${selectedLevel}`;
 
-        // Initialize word display for level 1
-        if (selectedLevel === '1') {
+        // Initialize word display for all levels
+        if (selectedLevel === '1' || selectedLevel === '2' || selectedLevel === '3') {
             const wordDisplay = document.getElementById('word-display');
             wordDisplay.classList.add('active');
 
@@ -428,7 +439,7 @@
         // 6. Export → "Upload my model" → Copy the shareable link
         // 7. Replace the URL below with your model URL
 
-        const modelURL = 'https://teachablemachine.withgoogle.com/models/fPxh7xXbR/';
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/fHa4bsIGO/';
 
         // Confidence threshold (80%)
         const CONFIDENCE_THRESHOLD = 0.80;
@@ -555,8 +566,8 @@
                 confidenceElement.textContent = `${confidencePercent}%`;
                 confidenceElement.style.color = '#555';
 
-                // Level 1: Check if predicted letter matches next expected letter
-                if (selectedLevel === '1' && currentLetterIndex < targetWord.length) {
+                // All levels: Check if predicted letter matches next expected letter
+                if ((selectedLevel === '1' || selectedLevel === '2' || selectedLevel === '3') && currentLetterIndex < targetWord.length) {
                     const expectedLetter = targetWord[currentLetterIndex];
 
                     if (currentPrediction === expectedLetter) {
