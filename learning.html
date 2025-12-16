@@ -165,18 +165,31 @@
         body.level-3 #middle-section {
             flex-direction: column;
             align-items: stretch;
-            gap: 40px;
+            gap: 30px;
+            padding: 0 60px;
+            justify-content: flex-start;
         }
 
         body.level-3 #camera-wrapper {
             align-self: flex-end;
-            width: 500px;
-            height: 375px;
+            width: 450px;
+            height: 340px;
+            flex: 0 0 auto;
         }
 
         body.level-3 #word-display {
-            flex: 1;
+            flex: 0 0 auto;
             order: 2;
+            height: auto;
+            max-height: 200px;
+        }
+
+        body.level-3 #top-section {
+            margin-bottom: 20px;
+        }
+
+        body.level-3 #current-letter-big {
+            font-size: 6em;
         }
 
         /* Curved camera container */
@@ -218,16 +231,22 @@
 
         /* Level 3 - smaller letters and images to fit */
         body.level-3 #word-letters {
-            gap: 25px;
+            gap: 20px;
+            align-items: center;
         }
 
         body.level-3 .word-letter {
-            font-size: 2em;
+            font-size: 1.5em;
         }
 
         body.level-3 .letter-image {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
+        }
+
+        body.level-3 #instruction {
+            margin-top: 10px;
+            font-size: 0.6em;
         }
 
         .letter-container {
