@@ -356,6 +356,11 @@
 
     <script>
         // ==========================================
+        // FADE IN IMMEDIATELY (BEFORE ANYTHING ELSE)
+        // ==========================================
+        document.body.classList.add('fade-in');
+
+        // ==========================================
         // GLOBAL VARIABLES
         // ==========================================
         let video;
@@ -404,11 +409,17 @@
             letterSpan.className = 'word-letter';
             letterSpan.textContent = letter;
 
-            // Create image element
+            // Create image element with error handling
             const letterImage = document.createElement('img');
             letterImage.className = 'letter-image';
             letterImage.src = `${letter}.png`;
             letterImage.alt = `ASL sign for ${letter}`;
+
+            // Handle missing images gracefully
+            letterImage.onerror = function() {
+                console.warn(`Image not found: ${letter}.png`);
+                this.style.display = 'none';
+            };
 
             container.appendChild(letterSpan);
             container.appendChild(letterImage);
@@ -430,9 +441,6 @@
                 window.location.href = 'levels.html';
             }, 1200);
         }
-
-        // Fade in immediately when script runs
-        document.body.classList.add('fade-in');
 
         // Teachable Machine model URL
         const modelURL = 'https://teachablemachine.withgoogle.com/models/fHa4bsIGO/';
