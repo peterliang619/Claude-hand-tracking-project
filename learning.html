@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn ASL</title>
+    <style>
+        /* ==========================================
+           WABI-SABI LEARNING PAGE
+           ========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #f5f0eb 0%, #e8dfd6 100%);
+            color: #8b7e74;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            cursor: none;
+        }
+
+        /* Fade in animation */
+        body.fade-in {
+            opacity: 1;
+        }
+
+        /* Fade out animation */
+        body.fade-out {
+            opacity: 0;
+        }
+
+        /* Left panel - Word display */
+        #left-panel {
+            width: 50%;
+            height: 100vh;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            box-sizing: border-box;
+        }
+
+        /* Right panel - Camera feed */
+        #right-panel {
+            width: 50%;
+            height: 100vh;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 0.7em;
+            margin: 0 0 100px 0;
+            font-weight: 300;
+            letter-spacing: 5px;
+            text-transform: lowercase;
+            color: #bfb3a8;
+        }
+
+        /* Back button */
+        #back-button {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            background: transparent;
+            border: 1px solid rgba(191, 179, 168, 0.3);
+            color: #bfb3a8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.65em;
+            font-weight: 300;
+            padding: 12px 24px;
+            cursor: pointer;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            transition: all 0.4s ease;
+            border-radius: 20px;
+        }
+
+        #back-button:hover {
+            border-color: rgba(139, 126, 116, 0.5);
+            color: #8b7e74;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Level indicator */
+        #level-indicator {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-size: 0.65em;
+            color: #d4c9be;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+        }
+
+        /* Word display */
+        #word-display {
+            text-align: center;
+            width: 100%;
+        }
+
+        #word-letters {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            max-width: 90%;
+            margin: 0 auto 60px auto;
+        }
+
+        .letter-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.8s ease;
+        }
+
+        .word-letter {
+            font-size: 4em;
+            font-weight: 200;
+            letter-spacing: 3px;
+            color: #a89a8e;
+            transition: all 0.8s ease;
+        }
+
+        /* Completed letters */
+        .letter-container.completed .word-letter {
+            opacity: 0.5;
+            color: #c4b5a8;
+        }
+
+        .letter-container.completed .letter-image {
+            opacity: 0.5;
+        }
+
+        /* Current letter */
+        .letter-container.current .word-letter {
+            opacity: 1;
+            color: #8b7e74;
+            transform: scale(1.1);
+        }
+
+        .letter-container.current .letter-image {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        /* Upcoming letters */
+        .letter-container.upcoming .word-letter {
+            opacity: 0.2;
+            color: #d4c9be;
+        }
+
+        .letter-container.upcoming .letter-image {
+            opacity: 0.2;
+        }
+
+        .letter-image {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            transition: all 0.8s ease;
+            border-radius: 12px;
+        }
+
+        #instruction {
+            font-size: 0.65em;
+            color: #c4b5a8;
+            letter-spacing: 3px;
+            font-weight: 300;
+            margin-top: 40px;
+        }
+
+        /* Current letter indicator */
+        #current-letter-display {
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        #current-letter-label {
+            font-size: 0.6em;
+            color: #bfb3a8;
+            letter-spacing: 3px;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+
+        #current-letter-big {
+            font-size: 8em;
+            font-weight: 200;
+            color: #8b7e74;
+            line-height: 1;
+        }
+
+        /* Canvas container */
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Completion overlay */
+        #complete-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(245, 240, 235, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+
+        #complete-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        #complete-content {
+            text-align: center;
+        }
+
+        #complete-message {
+            font-size: 2.5em;
+            font-weight: 300;
+            letter-spacing: 10px;
+            color: #a89a8e;
+            margin-bottom: 40px;
+            text-transform: lowercase;
+        }
+
+        #complete-submessage {
+            font-size: 0.9em;
+            color: #c4b5a8;
+            letter-spacing: 4px;
+            font-weight: 300;
+        }
+
+        /* Custom cursor */
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #c4b5a8;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.2s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-circle {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(139, 126, 116, 0.2);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.25s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        #back-button:hover ~ .cursor-dot,
+        button:hover ~ .cursor-dot {
+            transform: translate(-50%, -50%) scale(1.3);
+        }
+
+        #back-button:hover ~ .cursor-circle,
+        button:hover ~ .cursor-circle {
+            transform: translate(-50%, -50%) scale(1.3);
+            border-color: rgba(139, 126, 116, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-circle"></div>
+
+    <!-- Back button -->
+    <button id="back-button" onclick="goBack()">← levels</button>
+
+    <!-- Level indicator -->
+    <div id="level-indicator">level —</div>
+
+    <!-- Left panel - Word display -->
+    <div id="left-panel">
+        <h2>learn to sign</h2>
+
+        <!-- Word display with all letters -->
+        <div id="word-display">
+            <div id="word-letters"></div>
+            <div id="instruction">sign each letter to continue</div>
+        </div>
+
+        <!-- Current letter display -->
+        <div id="current-letter-display">
+            <div id="current-letter-label">current letter</div>
+            <div id="current-letter-big">—</div>
+        </div>
+    </div>
+
+    <!-- Right panel - Camera feed -->
+    <div id="right-panel">
+        <div id="canvas-container"></div>
+    </div>
+
+    <!-- Completion overlay -->
+    <div id="complete-overlay">
+        <div id="complete-content">
+            <div id="complete-message">well done!</div>
+            <div id="complete-submessage">returning to level selection...</div>
+        </div>
+    </div>
+
+    <!-- Load p5.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+    <!-- Load ml5.js library -->
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+
+    <script>
+        // ==========================================
+        // GLOBAL VARIABLES
+        // ==========================================
+        let video;
+        let classifier;
+        let handpose;
+        let modelReady = false;
+        let handposeReady = false;
+        let predictions = [];
+        let currentPrediction = '';
+        let currentConfidence = 0;
+
+        // Word spelling for different levels
+        const levelWords = {
+            '1': 'ABCDE',
+            '2': 'LEARN',
+            '3': 'COMMUNICATE'
+        };
+
+        // Get selected level from localStorage
+        const selectedLevel = localStorage.getItem('aslLevel') || '1';
+        const targetWord = levelWords[selectedLevel] || 'ABCDE';
+        let currentLetterIndex = 0;
+
+        // ==========================================
+        // LEVEL MANAGEMENT
+        // ==========================================
+        // Update level indicator
+        document.getElementById('level-indicator').textContent = `level ${selectedLevel}`;
+
+        // Initialize word display
+        const wordLettersDiv = document.getElementById('word-letters');
+        targetWord.split('').forEach((letter, index) => {
+            const container = document.createElement('div');
+            container.className = 'letter-container';
+            container.id = `container-${index}`;
+
+            // Set initial state
+            if (index === 0) {
+                container.classList.add('current');
+            } else {
+                container.classList.add('upcoming');
+            }
+
+            // Create letter text
+            const letterSpan = document.createElement('span');
+            letterSpan.className = 'word-letter';
+            letterSpan.textContent = letter;
+
+            // Create image element
+            const letterImage = document.createElement('img');
+            letterImage.className = 'letter-image';
+            letterImage.src = `${letter}.png`;
+            letterImage.alt = `ASL sign for ${letter}`;
+
+            container.appendChild(letterSpan);
+            container.appendChild(letterImage);
+            wordLettersDiv.appendChild(container);
+        });
+
+        // Update current letter display
+        function updateCurrentLetter() {
+            const currentLetter = targetWord[currentLetterIndex];
+            document.getElementById('current-letter-big').textContent = currentLetter;
+        }
+
+        updateCurrentLetter();
+
+        // Function to go back to level selection
+        function goBack() {
+            document.body.classList.add('fade-out');
+            setTimeout(() => {
+                window.location.href = 'levels.html';
+            }, 1200);
+        }
+
+        // Fade in immediately when script runs
+        document.body.classList.add('fade-in');
+
+        // Teachable Machine model URL
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/fHa4bsIGO/';
+
+        // Confidence threshold (80%)
+        const CONFIDENCE_THRESHOLD = 0.80;
+
+        // ==========================================
+        // P5.JS SETUP
+        // ==========================================
+        function setup() {
+            let canvas = createCanvas(windowWidth / 2, windowHeight);
+            canvas.parent('canvas-container');
+
+            video = createCapture(VIDEO);
+            video.hide();
+
+            // Load the Handpose model
+            handpose = ml5.handpose(video, handposeLoaded);
+            handpose.on('predict', gotHands);
+
+            // Load the Teachable Machine model
+            try {
+                classifier = ml5.imageClassifier(modelURL + 'model.json', video, modelLoaded);
+            } catch (error) {
+                console.error('Model loading error:', error);
+            }
+        }
+
+        function handposeLoaded() {
+            console.log('Handpose model loaded!');
+            handposeReady = true;
+        }
+
+        function gotHands(results) {
+            predictions = results;
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth / 2, windowHeight);
+        }
+
+        function modelLoaded() {
+            console.log('ASL model loaded successfully!');
+            modelReady = true;
+            classifyVideo();
+        }
+
+        // ==========================================
+        // CLASSIFY VIDEO FEED
+        // ==========================================
+        function classifyVideo() {
+            classifier.classify(video, gotResult);
+        }
+
+        function gotResult(error, results) {
+            if (error) {
+                console.error('Classification error:', error);
+                return;
+            }
+
+            if (results && results.length > 0) {
+                const topPrediction = results[0];
+                currentPrediction = topPrediction.label;
+                currentConfidence = topPrediction.confidence;
+
+                checkPrediction();
+            }
+
+            classifyVideo();
+        }
+
+        // ==========================================
+        // CHECK PREDICTION
+        // ==========================================
+        function checkPrediction() {
+            if (currentLetterIndex >= targetWord.length) return;
+
+            const expectedLetter = targetWord[currentLetterIndex];
+
+            if (currentConfidence >= CONFIDENCE_THRESHOLD && currentPrediction === expectedLetter) {
+                // Mark current letter as completed
+                const currentContainer = document.getElementById(`container-${currentLetterIndex}`);
+                currentContainer.classList.remove('current');
+                currentContainer.classList.add('completed');
+
+                currentLetterIndex++;
+
+                // Check if word is complete
+                if (currentLetterIndex >= targetWord.length) {
+                    setTimeout(() => {
+                        showCompletion();
+                    }, 800);
+                } else {
+                    // Move to next letter
+                    const nextContainer = document.getElementById(`container-${currentLetterIndex}`);
+                    nextContainer.classList.remove('upcoming');
+                    nextContainer.classList.add('current');
+                    updateCurrentLetter();
+                }
+            }
+        }
+
+        // ==========================================
+        // SHOW COMPLETION
+        // ==========================================
+        function showCompletion() {
+            const overlay = document.getElementById('complete-overlay');
+            overlay.classList.add('show');
+
+            setTimeout(() => {
+                window.location.href = 'levels.html';
+            }, 3000);
+        }
+
+        // ==========================================
+        // P5.JS DRAW
+        // ==========================================
+        function draw() {
+            // Draw the mirrored webcam feed
+            push();
+            translate(width, 0);
+            scale(-1, 1);
+            image(video, 0, 0, width, height);
+            pop();
+
+            // Draw hand tracking
+            if (handposeReady && predictions.length > 0) {
+                drawHandSkeleton();
+            }
+        }
+
+        // ==========================================
+        // DRAW HAND SKELETON
+        // ==========================================
+        function drawHandSkeleton() {
+            for (let i = 0; i < predictions.length; i++) {
+                const hand = predictions[i];
+                const landmarks = hand.landmarks;
+
+                const scaleX = width / video.width;
+                const scaleY = height / video.height;
+
+                const scaledLandmarks = landmarks.map(point => [
+                    width - (point[0] * scaleX),
+                    point[1] * scaleY,
+                    point[2]
+                ]);
+
+                drawConnections(scaledLandmarks);
+                drawLandmarks(scaledLandmarks);
+            }
+        }
+
+        function drawConnections(landmarks) {
+            stroke(168, 154, 142, 120);
+            strokeWeight(1.5);
+            noFill();
+
+            const connections = [
+                [0, 1, 2, 3, 4],
+                [0, 5, 6, 7, 8],
+                [0, 9, 10, 11, 12],
+                [0, 13, 14, 15, 16],
+                [0, 17, 18, 19, 20],
+                [5, 9, 13, 17]
+            ];
+
+            for (let path of connections) {
+                beginShape();
+                for (let index of path) {
+                    const [x, y] = landmarks[index];
+                    vertex(x, y);
+                }
+                endShape();
+            }
+        }
+
+        function drawLandmarks(landmarks) {
+            fill(168, 154, 142, 150);
+            noStroke();
+
+            for (let i = 0; i < landmarks.length; i++) {
+                const [x, y] = landmarks[i];
+                circle(x, y, 5);
+            }
+        }
+
+        // ==========================================
+        // CUSTOM CURSOR TRACKING
+        // ==========================================
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorCircle = document.querySelector('.cursor-circle');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let circleX = 0;
+        let circleY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        function animateCursor() {
+            circleX += (mouseX - circleX) * 0.15;
+            circleY += (mouseY - circleY) * 0.15;
+
+            cursorCircle.style.left = circleX + 'px';
+            cursorCircle.style.top = circleY + 'px';
+
+            requestAnimationFrame(animateCursor);
+        }
+
+        animateCursor();
+    </script>
+</body>
+</html>
