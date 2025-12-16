@@ -38,37 +38,32 @@
             opacity: 0;
         }
 
-        /* Left panel - Word display */
-        #left-panel {
-            width: 50%;
+        /* Main container */
+        #main-container {
+            width: 100%;
             height: 100vh;
-            background: transparent;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 60px;
+            padding: 40px;
             box-sizing: border-box;
         }
 
-        /* Right panel - Camera feed */
-        #right-panel {
-            width: 50%;
-            height: 100vh;
-            background: transparent;
+        /* Top section - Current letter */
+        #top-section {
+            flex: 0 0 auto;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            position: relative;
+            margin-bottom: 40px;
         }
 
         h2 {
             font-size: 0.7em;
-            margin: 0 0 100px 0;
-            font-weight: 300;
-            letter-spacing: 5px;
+            margin: 0 0 30px 0;
+            font-weight: 400;
+            letter-spacing: 6px;
             text-transform: lowercase;
-            color: #bfb3a8;
+            color: #6b5f56;
         }
 
         /* Back button */
@@ -108,7 +103,57 @@
             text-transform: lowercase;
         }
 
-        /* Word display */
+        /* Current letter display at top */
+        #current-letter-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #current-letter-label {
+            font-size: 0.65em;
+            color: #6b5f56;
+            letter-spacing: 4px;
+            font-weight: 400;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        #current-letter-big {
+            font-size: 10em;
+            font-weight: 200;
+            color: #5a4d44;
+            line-height: 1;
+        }
+
+        /* Middle section - Camera and word */
+        #middle-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            gap: 40px;
+        }
+
+        /* Curved camera container */
+        #camera-wrapper {
+            width: 600px;
+            height: 450px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(139, 126, 116, 0.2);
+        }
+
+        /* Word display - horizontal */
         #word-display {
             text-align: center;
             width: 100%;
@@ -117,11 +162,10 @@
         #word-letters {
             display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            max-width: 90%;
-            margin: 0 auto 60px auto;
+            align-items: flex-start;
+            gap: 50px;
+            flex-wrap: nowrap;
+            margin: 0 auto;
         }
 
         .letter-container {
@@ -133,17 +177,17 @@
         }
 
         .word-letter {
-            font-size: 4em;
-            font-weight: 200;
-            letter-spacing: 3px;
-            color: #a89a8e;
+            font-size: 3.5em;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #7a6d64;
             transition: all 0.8s ease;
         }
 
         /* Completed letters */
         .letter-container.completed .word-letter {
             opacity: 0.5;
-            color: #c4b5a8;
+            color: #b3a89f;
         }
 
         .letter-container.completed .letter-image {
@@ -153,68 +197,42 @@
         /* Current letter */
         .letter-container.current .word-letter {
             opacity: 1;
-            color: #8b7e74;
-            transform: scale(1.1);
+            color: #5a4d44;
+            transform: scale(1.15);
+            font-weight: 400;
         }
 
         .letter-container.current .letter-image {
             opacity: 1;
-            transform: scale(1.05);
+            transform: scale(1.1);
+            border: 3px solid #8b7e74;
         }
 
         /* Upcoming letters */
         .letter-container.upcoming .word-letter {
-            opacity: 0.2;
-            color: #d4c9be;
+            opacity: 0.3;
+            color: #c9beb5;
         }
 
         .letter-container.upcoming .letter-image {
-            opacity: 0.2;
+            opacity: 0.25;
         }
 
         .letter-image {
-            width: 140px;
-            height: 140px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
             transition: all 0.8s ease;
-            border-radius: 12px;
+            border-radius: 16px;
+            border: 2px solid rgba(139, 126, 116, 0.15);
         }
 
         #instruction {
             font-size: 0.65em;
-            color: #c4b5a8;
-            letter-spacing: 3px;
-            font-weight: 300;
-            margin-top: 40px;
-        }
-
-        /* Current letter indicator */
-        #current-letter-display {
-            margin-top: 60px;
-            text-align: center;
-        }
-
-        #current-letter-label {
-            font-size: 0.6em;
-            color: #bfb3a8;
-            letter-spacing: 3px;
-            font-weight: 300;
-            margin-bottom: 20px;
-        }
-
-        #current-letter-big {
-            font-size: 8em;
-            font-weight: 200;
             color: #8b7e74;
-            line-height: 1;
-        }
-
-        /* Canvas container */
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
+            letter-spacing: 3px;
+            font-weight: 400;
+            margin-top: 20px;
         }
 
         canvas {
@@ -318,26 +336,30 @@
     <!-- Level indicator -->
     <div id="level-indicator">level —</div>
 
-    <!-- Left panel - Word display -->
-    <div id="left-panel">
-        <h2>learn to sign</h2>
-
-        <!-- Word display with all letters -->
-        <div id="word-display">
-            <div id="word-letters"></div>
-            <div id="instruction">sign each letter to continue</div>
+    <!-- Main container -->
+    <div id="main-container">
+        <!-- Top section - Current letter -->
+        <div id="top-section">
+            <h2>learn to sign</h2>
+            <div id="current-letter-display">
+                <div id="current-letter-label">CURRENT LETTER</div>
+                <div id="current-letter-big">—</div>
+            </div>
         </div>
 
-        <!-- Current letter display -->
-        <div id="current-letter-display">
-            <div id="current-letter-label">current letter</div>
-            <div id="current-letter-big">—</div>
-        </div>
-    </div>
+        <!-- Middle section -->
+        <div id="middle-section">
+            <!-- Curved camera -->
+            <div id="camera-wrapper">
+                <div id="canvas-container"></div>
+            </div>
 
-    <!-- Right panel - Camera feed -->
-    <div id="right-panel">
-        <div id="canvas-container"></div>
+            <!-- Word display - horizontal with images below -->
+            <div id="word-display">
+                <div id="word-letters"></div>
+                <div id="instruction">sign each letter to continue</div>
+            </div>
+        </div>
     </div>
 
     <!-- Completion overlay -->
@@ -452,7 +474,8 @@
         // P5.JS SETUP
         // ==========================================
         function setup() {
-            let canvas = createCanvas(windowWidth / 2, windowHeight);
+            // Create curved camera canvas
+            let canvas = createCanvas(600, 450);
             canvas.parent('canvas-container');
 
             video = createCapture(VIDEO);
@@ -480,7 +503,8 @@
         }
 
         function windowResized() {
-            resizeCanvas(windowWidth / 2, windowHeight);
+            // Keep curved camera size consistent
+            resizeCanvas(600, 450);
         }
 
         function modelLoaded() {
