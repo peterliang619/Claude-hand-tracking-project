@@ -161,6 +161,24 @@
             padding: 0 60px;
         }
 
+        /* Level 3 specific layout - camera at top-right */
+        body.level-3 #middle-section {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 40px;
+        }
+
+        body.level-3 #camera-wrapper {
+            align-self: flex-end;
+            width: 500px;
+            height: 375px;
+        }
+
+        body.level-3 #word-display {
+            flex: 1;
+            order: 2;
+        }
+
         /* Curved camera container */
         #camera-wrapper {
             width: 600px;
@@ -196,6 +214,20 @@
             gap: 50px;
             flex-wrap: nowrap;
             margin: 0 auto;
+        }
+
+        /* Level 3 - smaller letters and images to fit */
+        body.level-3 #word-letters {
+            gap: 25px;
+        }
+
+        body.level-3 .word-letter {
+            font-size: 2em;
+        }
+
+        body.level-3 .letter-image {
+            width: 80px;
+            height: 80px;
         }
 
         .letter-container {
@@ -497,6 +529,9 @@
         const selectedLevel = localStorage.getItem('aslLevel') || '1';
         const targetWord = levelWords[selectedLevel] || 'ABCDE';
         let currentLetterIndex = 0;
+
+        // Add level-specific class to body for conditional styling
+        document.body.classList.add(`level-${selectedLevel}`);
 
         // ==========================================
         // LEVEL MANAGEMENT
