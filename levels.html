@@ -345,6 +345,9 @@
         let handpose;
         let predictions = [];
         let gestureTimeout = null;
+        let lastFingerCount = -1;
+        let fingerCountHistory = [];
+        const STABILITY_FRAMES = 5; // Need 5 consistent frames
 
         function setup() {
             // Create canvas for webcam
@@ -431,49 +434,82 @@
         // FINGER COUNTING LOGIC
         // ==========================================
         function detectFingerGesture() {
-            if (predictions.length === 0) return;
+            if (predictions.length === 0) {
+                fingerCountHistory = [];
+                lastFingerCount = -1;
+                if (gestureTimeout !== null) {
+                    clearTimeout(gestureTimeout);
+                    gestureTimeout = null;
+                }
+                return;
+            }
 
             const hand = predictions[0];
             const landmarks = hand.landmarks;
 
-            // Count extended fingers
+            // Count extended fingers with stricter thresholds
             let fingersUp = 0;
 
             // Thumb (check if tip is to the right/left of knuckle)
             const thumbTip = landmarks[4];
             const thumbKnuckle = landmarks[3];
-            if (Math.abs(thumbTip[0] - thumbKnuckle[0]) > 30) {
+            const thumbBase = landmarks[2];
+            // More strict: check both distance from knuckle AND base
+            if (Math.abs(thumbTip[0] - thumbKnuckle[0]) > 40 &&
+                Math.abs(thumbTip[0] - thumbBase[0]) > 50) {
                 fingersUp++;
             }
 
-            // Other fingers (check if tip is above knuckle)
+            // Other fingers (check if tip is above knuckle with stricter threshold)
             const fingerTips = [8, 12, 16, 20]; // Index, middle, ring, pinky
             const fingerKnuckles = [6, 10, 14, 18];
+            const fingerBases = [5, 9, 13, 17];
 
             for (let i = 0; i < fingerTips.length; i++) {
                 const tip = landmarks[fingerTips[i]];
                 const knuckle = landmarks[fingerKnuckles[i]];
+                const base = landmarks[fingerBases[i]];
 
-                // If tip is significantly above knuckle, finger is extended
-                if (tip[1] < knuckle[1] - 20) {
+                // More strict: tip must be significantly above both knuckle AND base
+                if (tip[1] < knuckle[1] - 30 && tip[1] < base[1] - 40) {
                     fingersUp++;
                 }
             }
 
-            // Trigger level selection based on finger count
-            if (fingersUp >= 1 && fingersUp <= 3) {
-                // Debounce gesture detection
-                if (gestureTimeout === null) {
-                    gestureTimeout = setTimeout(() => {
-                        selectLevel(fingersUp);
-                        gestureTimeout = null;
-                    }, 1500); // Wait 1.5 seconds before triggering
+            // Add to history for stability check
+            fingerCountHistory.push(fingersUp);
+            if (fingerCountHistory.length > STABILITY_FRAMES) {
+                fingerCountHistory.shift(); // Keep only last N frames
+            }
+
+            // Check if finger count is stable
+            const isStable = fingerCountHistory.length === STABILITY_FRAMES &&
+                             fingerCountHistory.every(count => count === fingersUp);
+
+            // Trigger level selection based on stable finger count
+            if (isStable && fingersUp >= 1 && fingersUp <= 3 && fingersUp !== lastFingerCount) {
+                lastFingerCount = fingersUp;
+
+                // Clear any existing timeout
+                if (gestureTimeout !== null) {
+                    clearTimeout(gestureTimeout);
                 }
-            } else {
-                // Reset timeout if gesture changes
+
+                // Set new timeout with stable count
+                gestureTimeout = setTimeout(() => {
+                    selectLevel(fingersUp);
+                    gestureTimeout = null;
+                    lastFingerCount = -1;
+                    fingerCountHistory = [];
+                }, 1500); // Wait 1.5 seconds before triggering
+            } else if (!isStable || fingersUp < 1 || fingersUp > 3) {
+                // Reset if gesture becomes unstable or invalid
                 if (gestureTimeout !== null) {
                     clearTimeout(gestureTimeout);
                     gestureTimeout = null;
+                }
+                if (!isStable) {
+                    lastFingerCount = -1;
                 }
             }
         }
