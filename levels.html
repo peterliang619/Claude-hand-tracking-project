@@ -382,10 +382,14 @@
                     const hand = predictions[i];
                     const landmarks = hand.landmarks;
 
-                    // Scale and mirror the landmarks
+                    // Calculate scale factors from video to canvas
+                    const scaleX = width / video.width;
+                    const scaleY = height / video.height;
+
+                    // Scale and mirror the landmarks to match canvas
                     const scaledLandmarks = landmarks.map(point => [
-                        width - point[0],
-                        point[1],
+                        width - (point[0] * scaleX),
+                        point[1] * scaleY,
                         point[2]
                     ]);
 
